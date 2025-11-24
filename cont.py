@@ -6,7 +6,7 @@ import os
 OUTPUT_FILE = "context.md"
 
 # Папки, которые нужно включить в парсинг (в данном случае 'src')
-DIRS_TO_INCLUDE = ["src", "app", "public"]
+DIRS_TO_INCLUDE = ["src", "app", "public", "lib", "components"]
 
 # Папки, которые нужно полностью исключить из парсинга
 # Добавил еще несколько стандартных, чтобы вывод был чище
