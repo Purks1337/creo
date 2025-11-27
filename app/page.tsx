@@ -28,7 +28,7 @@ const DATA = {
     description: "Плотный хлопок, оверсайз крой. Идеально для работы и рейвов. Создана, чтобы пережить любые дедлайны.",
     size: "One Size",
     images: [
-      "/images/tshirt.png", // Main local image
+      "/images/tshirt.webp", // Main local image
       "https://placehold.co/600x800/222222/FFF?text=Back+View",
       "https://placehold.co/600x800/333333/FFF?text=Detail",
     ],
@@ -253,7 +253,7 @@ export default function Home() {
                    handle="creo.design"
                    status="Limited Edition"
                    avatarUrl={DATA.product.images[0]}
-                   miniAvatarUrl="/images/round-ava.jpg"
+                   miniAvatarUrl="/images/round-ava.webp"
                    iconUrl="/images/creo-v-white.svg"
                    contactText="КУПИТЬ"
                    onContactClick={() => setCheckoutOpen(true)}
