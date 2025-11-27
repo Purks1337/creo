@@ -295,6 +295,7 @@ export default function Home() {
                      status="Limited Edition"
                      avatarUrl={DATA.product.images[0]}
                      miniAvatarUrl={logoUrl} // Using logo here instead of tshirt
+                     iconUrl="/images/creo-v-white.svg" // Activates the background pattern
                      contactText="BUY NOW"
                      onContactClick={() => setCheckoutOpen(true)}
                      grainUrl={grainUrl}
