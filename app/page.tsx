@@ -33,9 +33,6 @@ const DATA = {
       "https://placehold.co/600x800/333333/FFF?text=Detail",
     ],
   } as Product,
-  author: {
-    loaderText: "Надеваем колпак...",
-  },
   history: {
     text: "В 2025 году мы решили, что миру нужна только одна футболка. Мы убрали всё лишнее, оставив только суть.",
     photos: [
@@ -60,43 +57,6 @@ const Header = () => (
     </div>
   </motion.header>
 );
-
-const Preloader = ({ onComplete }: { onComplete: () => void }) => {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(onComplete, 800);
-          return 100;
-        }
-        return prev + 1.5;
-      });
-    }, 20);
-    return () => clearInterval(timer);
-  }, [onComplete]);
-
-  return (
-    <motion.div
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-background"
-      exit={{ y: "-100%", transition: { duration: 0.8, ease: [0.76, 0, 0.24, 1] } }}
-    >
-      <div className="relative w-32 h-32 mb-8 overflow-hidden rounded-full">
-        <Image src="https://placehold.co/200x200/171717/FFF?text=Author" alt="Author" fill className="object-cover grayscale" />
-      </div>
-      <p className="text-lg font-medium mb-4 text-white">{DATA.author.loaderText}</p>
-      <div className="w-48 h-[1px] bg-zinc-800 overflow-hidden rounded-full">
-        <motion.div 
-          className="h-full bg-white" 
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-        />
-      </div>
-    </motion.div>
-  );
-};
 
 // --- Checkout Flow ---
 const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
@@ -161,8 +121,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
       {/* Right: Content Steps */}
       <div className="w-full md:w-1/2 h-[60vh] md:h-screen relative p-8 md:p-16 pt-12 flex flex-col bg-background text-foreground">
         <AnimatePresence mode="wait" custom={direction}>
-            
-            {/* STEP 1: DETAIL */}
             {step === 'detail' && (
                 <motion.div 
                     key="detail"
@@ -183,7 +141,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                 </motion.div>
             )}
 
-            {/* STEP 2: DELIVERY */}
             {step === 'delivery' && (
                 <motion.div 
                     key="delivery"
@@ -206,7 +163,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                 </motion.div>
             )}
 
-            {/* STEP 3: PAYMENT */}
             {step === 'payment' && (
                  <motion.div 
                     key="payment"
@@ -230,7 +186,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                 </motion.div>
             )}
 
-            {/* STEP 4: SUCCESS */}
             {step === 'success' && (
                 <motion.div 
                     key="success"
@@ -243,7 +198,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                     <button onClick={onClose} className="px-8 py-3 border border-zinc-700 rounded-full hover:bg-zinc-800 transition-colors">В магазин</button>
                 </motion.div>
             )}
-
         </AnimatePresence>
       </div>
     </motion.div>
@@ -252,81 +206,87 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
 
 // --- Main Page ---
 export default function Home() {
-  const [loading, setLoading] = useState(true);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  
+  // FIX: Добавляем состояние mounted. 
+  // Это гарантирует, что ProfileCard рендерится только на клиенте, 
+  // когда DOM доступен для расчетов ширины/высоты.
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Dark grain texture
   const grainUrl = "data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E";
+
+  // Рендерим пустой фон пока не смонтирован клиент, чтобы избежать "прыжков" стилей и ошибок расчетов
+  if (!isMounted) {
+    return <main className="h-screen w-full bg-background bg-noise overflow-hidden relative" />;
+  }
 
   return (
     <main className="h-screen w-full bg-background text-foreground bg-noise overflow-hidden relative">
       <Header />
       
-      <AnimatePresence>
-        {loading && <Preloader onComplete={() => setLoading(false)} />}
-      </AnimatePresence>
-
-      {!loading && (
-        // Inner Scroll Container: Handles content that exceeds 100vh
-        <div className="h-full w-full overflow-y-auto no-scrollbar">
-            
-            {/* View 1: Centered Card (Takes exactly 100vh min) */}
-            <div className="min-h-screen w-full flex flex-col items-center justify-center p-6">
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9, y: 30 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                  className="w-full max-w-4xl flex justify-center"
-                >
-                  <ProfileCard 
-                     name={DATA.product.name}
-                     title={`${DATA.product.price} ${DATA.product.currency}`}
-                     handle="creo.design"
-                     status="Limited Edition"
-                     avatarUrl={DATA.product.images[0]}
-                     miniAvatarUrl="/images/round-ava.jpg"
-                     iconUrl="/images/creo-v-white.svg" // Activates the background pattern
-                     contactText="BUY NOW"
-                     onContactClick={() => setCheckoutOpen(true)}
-                     grainUrl={grainUrl}
-                     innerGradient="linear-gradient(135deg, rgba(18,18,20,0.95) 0%, rgba(30,30,35,0.95) 100%)"
-                     behindGlowColor="rgba(255, 255, 255, 0.05)"
-                     behindGlowSize="60%"
-                     enableTilt={true}
-                     className="cursor-pointer"
-                  />
-                </motion.div>
-                
-            </div>
-            
-            {/* View 2: History & Details (Below fold) */}
-            <div className="w-full flex flex-col items-center pb-24">
-                <motion.div 
-                  initial={{ opacity: 0, y: 50 }} 
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.2 }}
-                  className="max-w-4xl px-6 grid grid-cols-1 md:grid-cols-3 gap-4"
-                >
-                   {DATA.history.photos.map((src, i) => (
-                      <div key={i} className="relative aspect-[4/5] overflow-hidden rounded-lg opacity-80 hover:opacity-100 transition-opacity">
-                        <Image src={src} alt="history" fill className="object-cover hover:scale-105 transition-transform duration-500" />
-                      </div>
-                   ))}
-                </motion.div>
-                
-                <motion.div 
-                  initial={{ opacity: 0 }} 
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.4 }}
-                  className="mt-12 max-w-2xl px-6 text-center text-zinc-500 text-lg leading-relaxed"
-                >
-                  {DATA.history.text}
-                </motion.div>
-            </div>
-        </div>
-      )}
+      {/* Inner Scroll Container */}
+      <div className="h-full w-full overflow-y-auto no-scrollbar">
+          
+          {/* View 1: Centered Card */}
+          <div className="min-h-screen w-full flex flex-col items-center justify-center p-6">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full max-w-4xl flex justify-center"
+              >
+                <ProfileCard 
+                   name={DATA.product.name}
+                   title={`${DATA.product.price} ${DATA.product.currency}`}
+                   handle="creo.design"
+                   status="Limited Edition"
+                   avatarUrl={DATA.product.images[0]}
+                   miniAvatarUrl="/images/round-ava.jpg"
+                   iconUrl="/images/creo-v-white.svg"
+                   contactText="BUY NOW"
+                   onContactClick={() => setCheckoutOpen(true)}
+                   grainUrl={grainUrl}
+                   innerGradient="linear-gradient(135deg, rgba(18,18,20,0.95) 0%, rgba(30,30,35,0.95) 100%)"
+                   behindGlowColor="rgba(255, 255, 255, 0.05)"
+                   behindGlowSize="60%"
+                   enableTilt={true}
+                   className="cursor-pointer"
+                />
+              </motion.div>
+          </div>
+          
+          {/* View 2: History & Details */}
+          <div className="w-full flex flex-col items-center pb-24">
+              <motion.div 
+                initial={{ opacity: 0, y: 50 }} 
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="max-w-4xl px-6 grid grid-cols-1 md:grid-cols-3 gap-4"
+              >
+                 {DATA.history.photos.map((src, i) => (
+                    <div key={i} className="relative aspect-[4/5] overflow-hidden rounded-lg opacity-80 hover:opacity-100 transition-opacity">
+                      <Image src={src} alt="history" fill className="object-cover hover:scale-105 transition-transform duration-500" />
+                    </div>
+                 ))}
+              </motion.div>
+              
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.4 }}
+                className="mt-12 max-w-2xl px-6 text-center text-zinc-500 text-lg leading-relaxed"
+              >
+                {DATA.history.text}
+              </motion.div>
+          </div>
+      </div>
 
       <AnimatePresence>
         {checkoutOpen && <CheckoutFlow onClose={() => setCheckoutOpen(false)} />}

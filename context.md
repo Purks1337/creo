@@ -560,7 +560,6 @@ const Header = () => (
     <div className="pointer-events-auto cursor-pointer">
        <h1 className="text-3xl font-bold tracking-tighter">creo</h1>
     </div>
-    <div className="text-xs tracking-widest uppercase opacity-70 mix-blend-difference font-mono">MVP build 0.5.2</div>
   </motion.header>
 );
 
@@ -652,19 +651,13 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
             transition={{ duration: 0.6 }}
             className="w-full h-full absolute inset-0"
          >
-             <Image src={DATA.product.images[0]} alt="T-Shirt" fill className="object-cover" />
+             <Image 
+                src={DATA.product.images[0]} 
+                alt="T-Shirt" 
+                fill 
+                className="object-contain p-12" 
+             />
          </motion.div>
-         {/* Overlay text for steps other than detail */}
-         <AnimatePresence>
-            {step !== 'detail' && (
-                <motion.div 
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black/60 flex items-center justify-center pointer-events-none"
-                >
-                    <h2 className="text-white text-5xl font-bold tracking-tighter text-center opacity-50">creo</h2>
-                </motion.div>
-            )}
-         </AnimatePresence>
       </div>
 
       {/* Right: Content Steps */}
@@ -767,9 +760,6 @@ export default function Home() {
   // Dark grain texture
   const grainUrl = "data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E";
 
-  // Logo for mini avatar
-  const logoUrl = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='white'/%3E%3Ctext x='50' y='50' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='60' fill='black'%3Ec%3C/text%3E%3C/svg%3E";
-
   return (
     <main className="h-screen w-full bg-background text-foreground bg-noise overflow-hidden relative">
       <Header />
@@ -796,7 +786,8 @@ export default function Home() {
                      handle="creo.design"
                      status="Limited Edition"
                      avatarUrl={DATA.product.images[0]}
-                     miniAvatarUrl={logoUrl} // Using logo here instead of tshirt
+                     miniAvatarUrl="/images/round-ava.jpg"
+                     iconUrl="/images/creo-v-white.svg" // Activates the background pattern
                      contactText="BUY NOW"
                      onContactClick={() => setCheckoutOpen(true)}
                      grainUrl={grainUrl}
@@ -808,9 +799,6 @@ export default function Home() {
                   />
                 </motion.div>
                 
-                <div className="absolute bottom-8 left-0 w-full text-center animate-bounce text-zinc-600 text-sm pointer-events-none font-mono opacity-50">
-                    SCROLL FOR DETAILS
-                </div>
             </div>
             
             {/* View 2: History & Details (Below fold) */}
@@ -1228,6 +1216,7 @@ export default function Dither({
   --behind-glow-color: rgba(125, 190, 255, 0.67);
   --behind-glow-size: 25%;
   --inner-gradient: none;
+  /* Цвета бликов сделаем чуть мягче */
   --sunpillar-1: hsl(2, 100%, 73%);
   --sunpillar-2: hsl(53, 100%, 69%);
   --sunpillar-3: hsl(93, 100%, 69%);
@@ -1316,33 +1305,49 @@ export default function Dither({
   background-image: var(--inner-gradient);
   background-color: rgba(0, 0, 0, 0.9);
   transform: none;
+  /* Убеждаемся, что контент внутри правильно слоится */
+  display: grid;
 }
 
+/* === SHINE / PATTERN EFFECT === */
 .pc-shine {
+  /* Формируем паттерн через маску */
   mask-image: var(--icon);
   mask-mode: luminance;
   mask-repeat: repeat;
-  mask-size: 150%;
-  mask-position: top calc(200% - (var(--background-y) * 5)) left calc(100% - var(--background-x));
-  transition: filter 0.8s ease;
-  filter: brightness(0.5) contrast(1.1) saturate(0.33) opacity(0.5);
+  /* Увеличиваем размер, чтобы логотипы не лепились друг к другу */
+  mask-size: 140px; 
+  mask-position: center;
+  
+  /* Начальное состояние - очень тусклое, чтобы не рябило */
+  opacity: 0.1;
+  
+  transition: opacity 0.3s ease, filter 0.3s ease;
+  filter: brightness(0.8) contrast(1.2);
+  
   animation: holo-bg 18s linear infinite;
   animation-play-state: running;
-  mix-blend-mode: color-dodge; 
-  opacity: 0.15;
+  
+  /* Color-dodge дает эффект свечения, но требует темного фона */
+  mix-blend-mode: color-dodge;
+  
+  /* Слой ниже контента */
+  z-index: 1; 
+  transform: translate3d(0, 0, 1px);
 }
 
 .pc-shine,
 .pc-shine::after {
   --space: 5%;
   --angle: -45deg;
-  transform: translate3d(0, 0, 1px);
   overflow: hidden;
-  z-index: 3;
   background: transparent;
   background-size: cover;
   background-position: center;
+  
+  /* Градиенты для голографического эффекта */
   background-image:
+    /* Вертикальные полосы (Sunpillars) */
     repeating-linear-gradient(
       0deg,
       var(--sunpillar-clr-1) calc(var(--space) * 1),
@@ -1353,6 +1358,7 @@ export default function Dither({
       var(--sunpillar-clr-6) calc(var(--space) * 6),
       var(--sunpillar-clr-1) calc(var(--space) * 7)
     ),
+    /* Диагональные полосы для перелива */
     repeating-linear-gradient(
       var(--angle),
       #0e152e 0%,
@@ -1362,22 +1368,21 @@ export default function Dither({
       #0e152e 10%,
       #0e152e 12%
     ),
+    /* Радиальный градиент, привязанный к курсору */
     radial-gradient(
       farthest-corner circle at var(--pointer-x) var(--pointer-y),
       hsla(0, 0%, 0%, 0.1) 12%,
-      hsla(0, 0%, 0%, 0.15) 20%,
-      hsla(0, 0%, 0%, 0.25) 120%
+      hsla(0, 0%, 0%, 0.1) 20%,
+      hsla(0, 0%, 0%, 0.8) 120%
     );
+    
+  background-blend-mode: soft-light, overlay, normal;
+  /* Увеличиваем размер фона, чтобы градиенты были плавнее */
+  background-size: 400% 400%, 300% 300%, 200% 200%;
   background-position:
-    0 var(--background-y),
+    calc(var(--background-x) + var(--pointer-x)) calc(var(--background-y) + var(--pointer-y)),
     var(--background-x) var(--background-y),
     center;
-  background-blend-mode: color, hard-light;
-  background-size:
-    500% 500%,
-    300% 300%,
-    200% 200%;
-  background-repeat: repeat;
 }
 
 .pc-shine::before,
@@ -1390,9 +1395,10 @@ export default function Dither({
   transition: opacity 0.8s ease;
 }
 
+/* При наведении делаем паттерн чуть ярче, но не кислотным */
 .pc-card:hover .pc-shine,
 .pc-card.active .pc-shine {
-  filter: brightness(0.6) contrast(1.2) saturate(0.5);
+  opacity: 0.25; /* Максимум 25% непрозрачности */
   animation-play-state: paused;
 }
 
@@ -1404,30 +1410,15 @@ export default function Dither({
 }
 
 .pc-shine::before {
+  /* Зернистость и дополнительные переливы */
   background-image:
-    linear-gradient(
-      45deg,
-      var(--sunpillar-4),
-      var(--sunpillar-5),
-      var(--sunpillar-6),
-      var(--sunpillar-1),
-      var(--sunpillar-2),
-      var(--sunpillar-3)
-    ),
-    radial-gradient(circle at var(--pointer-x) var(--pointer-y), hsl(0, 0%, 70%) 0%, hsla(0, 0%, 30%, 0.2) 90%),
+    radial-gradient(circle at var(--pointer-x) var(--pointer-y), hsl(0, 0%, 90%) 0%, hsla(0, 0%, 10%, 0.1) 90%),
     var(--grain);
-  background-size:
-    250% 250%,
-    100% 100%,
-    220px 220px;
-  background-position:
-    var(--pointer-x) var(--pointer-y),
-    center,
-    calc(var(--pointer-x) * 0.01) calc(var(--pointer-y) * 0.01);
-  background-blend-mode: color-dodge;
-  filter: brightness(calc(2 - var(--pointer-from-center))) contrast(calc(var(--pointer-from-center) + 2))
-    saturate(calc(0.5 + var(--pointer-from-center)));
-  mix-blend-mode: luminosity;
+  background-size: 100% 100%, 220px 220px;
+  background-position: center, 0 0;
+  background-blend-mode: overlay;
+  mix-blend-mode: overlay;
+  opacity: 0.3;
 }
 
 .pc-shine::after {
@@ -1435,12 +1426,9 @@ export default function Dither({
     0 var(--background-y),
     calc(var(--background-x) * 0.4) calc(var(--background-y) * 0.5),
     center;
-  background-size:
-    200% 300%,
-    700% 700%,
-    100% 100%;
-  mix-blend-mode: difference;
-  filter: brightness(0.8) contrast(1.5);
+  background-size: 200% 300%, 700% 700%, 100% 100%;
+  mix-blend-mode: overlay;
+  filter: brightness(0.9) contrast(1.2);
 }
 
 .pc-glare {
@@ -1448,36 +1436,36 @@ export default function Dither({
   overflow: hidden;
   background-image: radial-gradient(
     farthest-corner circle at var(--pointer-x) var(--pointer-y),
-    hsl(248, 25%, 80%) 12%,
-    hsla(207, 40%, 30%, 0.8) 90%
+    hsla(0, 0%, 100%, 0.1) 0%,
+    hsla(0, 0%, 100%, 0) 60%
   );
   mix-blend-mode: overlay;
-  filter: brightness(0.8) contrast(1.2);
   z-index: 4;
-  opacity: 0.3;
+  opacity: 0.6;
 }
 
+/* === PRODUCT LAYER === */
 .pc-avatar-content {
   mix-blend-mode: normal;
   overflow: visible;
-  transform: translateZ(2);
+  /* Поднимаем товар выше паттерна */
+  transform: translateZ(10px); 
+  z-index: 5;
   backface-visibility: hidden;
 }
 
-/* === PRODUCT IMAGE STYLING (FIXED CENTERING) === */
 .pc-avatar-content .avatar {
-  width: 90%; /* Занимает почти всю ширину, но с отступами */
+  width: 90%; 
   height: auto;
-  max-height: 65%; 
+  max-height: 60%;
   object-fit: contain;
   
   position: absolute;
   left: 50%;
-  top: 45%; /* Визуальный центр */
+  top: 53%; 
   
   transform-origin: 50% 50%;
   
-  /* FIX: Центрируем (-50%, -50%) + добавляем параллакс */
   transform: translate3d(
     calc(-50% + (var(--pointer-from-left) - 0.5) * 20px), 
     calc(-50% + (var(--pointer-from-top) - 0.5) * 20px), 
@@ -1491,15 +1479,6 @@ export default function Dither({
   filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
 }
 
-.pc-avatar-content::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  backdrop-filter: none;
-  pointer-events: none;
-}
-
 .pc-user-info {
   position: absolute;
   --ui-inset: 20px;
@@ -1507,7 +1486,7 @@ export default function Dither({
   bottom: var(--ui-inset);
   left: var(--ui-inset);
   right: var(--ui-inset);
-  z-index: 2;
+  z-index: 10; /* Интерфейс поверх всего */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1593,7 +1572,7 @@ export default function Dither({
     calc(var(--pointer-from-top) * -6px + 3px),
     0.1px
   );
-  z-index: 5;
+  z-index: 6;
   mix-blend-mode: luminosity;
 }
 
@@ -1611,21 +1590,6 @@ export default function Dither({
   font-size: min(5svh, 3em);
   margin: 0;
   background-image: linear-gradient(to bottom, #fff, #6f6fbe);
-  background-size: 1em 1.5em;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  -webkit-background-clip: text;
-}
-
-.pc-details p {
-  font-weight: 600;
-  position: relative;
-  top: -12px;
-  white-space: nowrap;
-  font-size: 16px;
-  margin: 0 auto;
-  width: min-content;
-  background-image: linear-gradient(to bottom, #fff, #4a4ac0);
   background-size: 1em 1.5em;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1663,41 +1627,17 @@ export default function Dither({
     height: 70svh;
     max-height: 450px;
   }
-
-  .pc-details {
-    top: 2em;
-  }
-
   .pc-details h3 {
     font-size: min(4svh, 2.5em);
   }
-
-  .pc-details p {
-    font-size: 14px;
-  }
-
   .pc-user-info {
     --ui-inset: 15px;
     padding: 10px 12px;
   }
-
   .pc-mini-avatar {
     width: 28px;
     height: 28px;
   }
-
-  .pc-user-details {
-    gap: 10px;
-  }
-
-  .pc-handle {
-    font-size: 13px;
-  }
-
-  .pc-status {
-    font-size: 10px;
-  }
-
   .pc-contact-btn {
     padding: 6px 12px;
     font-size: 11px;
@@ -1709,46 +1649,20 @@ export default function Dither({
     height: 60svh;
     max-height: 380px;
   }
-
-  .pc-details {
-    top: 1.5em;
-  }
-
   .pc-details h3 {
     font-size: min(3.5svh, 2em);
   }
-
-  .pc-details p {
-    font-size: 12px;
-    top: -8px;
-  }
-
   .pc-user-info {
     --ui-inset: 12px;
     padding: 8px 10px;
   }
-
   .pc-mini-avatar {
     width: 24px;
     height: 24px;
   }
-
-  .pc-user-details {
-    gap: 8px;
-  }
-
-  .pc-handle {
-    font-size: 12px;
-  }
-
-  .pc-status {
-    font-size: 9px;
-  }
-
   .pc-contact-btn {
     padding: 5px 10px;
     font-size: 10px;
-    border-radius: 50px;
   }
 }
 
@@ -1757,40 +1671,19 @@ export default function Dither({
     height: 55svh;
     max-height: 320px;
   }
-
   .pc-details h3 {
     font-size: min(3svh, 1.5em);
   }
-
-  .pc-details p {
-    font-size: 11px;
-  }
-
   .pc-user-info {
     padding: 6px 8px;
   }
-
   .pc-mini-avatar {
     width: 20px;
     height: 20px;
   }
-
-  .pc-user-details {
-    gap: 6px;
-  }
-
-  .pc-handle {
-    font-size: 11px;
-  }
-
-  .pc-status {
-    font-size: 8px;
-  }
-
   .pc-contact-btn {
     padding: 4px 8px;
     font-size: 9px;
-    border-radius: 50px;
   }
 }
 ```
@@ -2185,7 +2078,7 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
             <div className="pc-content">
               <div className="pc-details">
                 <h3>{name}</h3>
-                <p>{title}</p>
+                {/* Subtitle removed */}
               </div>
             </div>
           </div>
@@ -2197,5 +2090,4 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
 
 const ProfileCard = React.memo(ProfileCardComponent);
 export default ProfileCard;
-
 ```
