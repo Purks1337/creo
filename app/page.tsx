@@ -50,10 +50,19 @@ const Header = () => (
     initial={{ opacity: 0, y: -20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.8, ease: "easeOut" }}
-    className="fixed top-0 left-0 w-full z-40 px-8 py-6 flex justify-between items-center text-white pointer-events-none"
+    // REMOVED: fixed top-0 left-0
+    // ADDED: w-full z-40 relative
+    className="w-full z-40 px-8 py-8 flex justify-center items-center pointer-events-none relative"
   >
-    <div className="pointer-events-auto cursor-pointer">
-       <h1 className="text-3xl font-bold tracking-tighter">creo</h1>
+    <div className="pointer-events-auto cursor-pointer opacity-90 hover:opacity-100 transition-opacity">
+       <Image 
+         src="/images/creo-v-white.svg" 
+         alt="creo logo" 
+         width={96} 
+         height={96} 
+         className="w-24 h-auto drop-shadow-lg"
+         priority
+       />
     </div>
   </motion.header>
 );
@@ -207,10 +216,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
 // --- Main Page ---
 export default function Home() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  
-  // FIX: Добавляем состояние mounted. 
-  // Это гарантирует, что ProfileCard рендерится только на клиенте, 
-  // когда DOM доступен для расчетов ширины/высоты.
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -220,20 +225,22 @@ export default function Home() {
   // Dark grain texture
   const grainUrl = "data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E";
 
-  // Рендерим пустой фон пока не смонтирован клиент, чтобы избежать "прыжков" стилей и ошибок расчетов
   if (!isMounted) {
     return <main className="h-screen w-full bg-background bg-noise overflow-hidden relative" />;
   }
 
   return (
     <main className="h-screen w-full bg-background text-foreground bg-noise overflow-hidden relative">
-      <Header />
       
       {/* Inner Scroll Container */}
       <div className="h-full w-full overflow-y-auto no-scrollbar">
           
+          {/* Header moved INSIDE the scroll container */}
+          <Header />
+
           {/* View 1: Centered Card */}
-          <div className="min-h-screen w-full flex flex-col items-center justify-center p-6">
+          {/* We remove min-h-screen to let it flow naturally, OR keep it if you want full height spacer */}
+          <div className="min-h-[calc(100vh-160px)] w-full flex flex-col items-center justify-center p-6 pb-20">
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9, y: 30 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -248,7 +255,7 @@ export default function Home() {
                    avatarUrl={DATA.product.images[0]}
                    miniAvatarUrl="/images/round-ava.jpg"
                    iconUrl="/images/creo-v-white.svg"
-                   contactText="BUY NOW"
+                   contactText="КУПИТЬ"
                    onContactClick={() => setCheckoutOpen(true)}
                    grainUrl={grainUrl}
                    innerGradient="linear-gradient(135deg, rgba(18,18,20,0.95) 0%, rgba(30,30,35,0.95) 100%)"
