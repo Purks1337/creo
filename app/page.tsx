@@ -58,7 +58,6 @@ const Header = () => (
     <div className="pointer-events-auto cursor-pointer">
        <h1 className="text-3xl font-bold tracking-tighter">creo</h1>
     </div>
-    <div className="text-xs tracking-widest uppercase opacity-70 mix-blend-difference font-mono">MVP build 0.5.2</div>
   </motion.header>
 );
 
@@ -150,19 +149,13 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
             transition={{ duration: 0.6 }}
             className="w-full h-full absolute inset-0"
          >
-             <Image src={DATA.product.images[0]} alt="T-Shirt" fill className="object-cover" />
+             <Image 
+                src={DATA.product.images[0]} 
+                alt="T-Shirt" 
+                fill 
+                className="object-contain p-12" 
+             />
          </motion.div>
-         {/* Overlay text for steps other than detail */}
-         <AnimatePresence>
-            {step !== 'detail' && (
-                <motion.div 
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black/60 flex items-center justify-center pointer-events-none"
-                >
-                    <h2 className="text-white text-5xl font-bold tracking-tighter text-center opacity-50">creo</h2>
-                </motion.div>
-            )}
-         </AnimatePresence>
       </div>
 
       {/* Right: Content Steps */}
@@ -265,9 +258,6 @@ export default function Home() {
   // Dark grain texture
   const grainUrl = "data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E";
 
-  // Logo for mini avatar
-  const logoUrl = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='white'/%3E%3Ctext x='50' y='50' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='60' fill='black'%3Ec%3C/text%3E%3C/svg%3E";
-
   return (
     <main className="h-screen w-full bg-background text-foreground bg-noise overflow-hidden relative">
       <Header />
@@ -294,7 +284,7 @@ export default function Home() {
                      handle="creo.design"
                      status="Limited Edition"
                      avatarUrl={DATA.product.images[0]}
-                     miniAvatarUrl={logoUrl} // Using logo here instead of tshirt
+                     miniAvatarUrl="/images/round-ava.jpg"
                      iconUrl="/images/creo-v-white.svg" // Activates the background pattern
                      contactText="BUY NOW"
                      onContactClick={() => setCheckoutOpen(true)}
@@ -307,9 +297,6 @@ export default function Home() {
                   />
                 </motion.div>
                 
-                <div className="absolute bottom-8 left-0 w-full text-center animate-bounce text-zinc-600 text-sm pointer-events-none font-mono opacity-50">
-                    SCROLL FOR DETAILS
-                </div>
             </div>
             
             {/* View 2: History & Details (Below fold) */}
