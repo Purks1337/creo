@@ -7,6 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProfileCard from "@/components/ProfileCard";
 
+// === ССЫЛКА НА ВАШ СКРИПТ ===
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywXU64HuHJ3yhLVFrkZ-59yTD9jvlixAyz9xdxY6mo_MpqOaPT-y91E-Oze9_d8cy9/exec"; 
+
 // --- Global Types for CloudPayments ---
 declare global {
   interface Window {
@@ -114,7 +117,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
   const [step, setStep] = useState<CheckoutStep>("detail");
   const [direction, setDirection] = useState(0);
   
-  // === ОБНОВЛЕНО: Добавлен email ===
   const [form, setForm] = useState({ name: "", address: "", phone: "", email: "" });
   const [errors, setErrors] = useState({ name: false, address: false, phone: false, email: false });
 
@@ -135,14 +137,13 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
   };
 
   const validateAndProceedToPayment = () => {
-    // Простая проверка email по наличию @ и точки
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
     const newErrors = {
       name: !form.name.trim(),
       address: !form.address.trim(),
       phone: !form.phone.trim(),
-      email: !form.email.trim() || !emailRegex.test(form.email), // Валидация email
+      email: !form.email.trim() || !emailRegex.test(form.email),
     };
     
     setErrors(newErrors);
@@ -154,14 +155,17 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
       console.error("CloudPayments widget script not loaded");
       return;
     }
+
+    const orderId = String(Date.now()); // Генерируем ID заказа
+
     const widget = new window.cp.CloudPayments();
     widget.pay('charge', { 
         publicId: 'pk_da6583e5d4a2bf9d6236da80df0e7', 
         description: `Оплата заказа: ${DATA.product.name}`,
         amount: DATA.product.price,
         currency: DATA.product.currency,
-        invoiceId: String(Date.now()), 
-        accountId: form.email, // === ОБНОВЛЕНО: Передаем email для чека ===
+        invoiceId: orderId, 
+        accountId: form.email, 
         skin: "mini", 
         data: { 
             name: form.name, 
@@ -170,7 +174,29 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
             email: form.email 
         }
     }, {
-        onSuccess: (options) => paginate('success', 1),
+        onSuccess: (options) => { 
+            console.log("Payment Success", options);
+            
+            // === ОТПРАВКА В GOOGLE TABLES ===
+            fetch(GOOGLE_SCRIPT_URL, {
+              method: "POST",
+              mode: "no-cors", 
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                orderId: orderId,
+                name: form.name,
+                address: form.address,
+                phone: form.phone,
+                email: form.email,
+                price: DATA.product.price
+              })
+            });
+            // ================================
+
+            paginate('success', 1);
+        },
         onFail: (reason, options) => alert("Ошибка при оплате: " + reason),
     });
   };
@@ -249,7 +275,7 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                             {errors.address && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
                         </div>
 
-                         {/* === ОБНОВЛЕНО: Поле Email === */}
+                         {/* Email */}
                          <div className="relative">
                             <input 
                                 type="email"
@@ -282,7 +308,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                         <div className="mt-4 pt-4 border-t border-zinc-800 text-sm text-zinc-400">
                              <p>Получатель: {form.name}</p>
                              <p>Адрес: {form.address}</p>
-                             {/* === ОБНОВЛЕНО: Показываем email в сводке === */}
                              <p>Email: {form.email}</p>
                              <p>Тел: {form.phone}</p>
                         </div>
@@ -320,7 +345,6 @@ export default function Home() {
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
-        // Ширина картинки (260) + gap (16) = 276
         const scrollAmount = 276; 
         scrollContainerRef.current.scrollBy({
             left: direction === 'left' ? -scrollAmount : scrollAmount,
