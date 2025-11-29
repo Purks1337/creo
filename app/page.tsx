@@ -36,6 +36,14 @@ interface Product {
   description: string;
   size: string;
   images: string[];
+  // Новое поле для спецификаций
+  specs?: {
+    size: string;
+    dimensions: string;
+    composition: string;
+    density: string;
+    measurements: { label: string; value: string }[];
+  };
 }
 
 // --- Mock Data ---
@@ -47,6 +55,19 @@ const DATA = {
     currency: "RUB",
     description: "Плотный хлопок, оверсайз крой. Идеально для работы и рейвов. Создана, чтобы пережить любые дедлайны.",
     size: "One Size",
+    // === ОБНОВЛЕННЫЕ ДАННЫЕ ===
+    specs: {
+      size: "48-50",
+      dimensions: "Ширина 58, длина 75",
+      composition: "Хлопок 80%, полиэстер 20%, интерлок",
+      density: "310г/м²",
+      measurements: [
+        { label: "Грудь", value: "94-102" },
+        { label: "Талия", value: "74-82" },
+        { label: "Бедра", value: "102-110" },
+      ]
+    },
+    // ===========================
     images: [
       "/images/tshirt.webp", // Убедись, что картинка есть в public/images/
       "https://placehold.co/600x800/222222/FFF?text=Back+View",
@@ -159,7 +180,7 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
     const widget = new window.cp.CloudPayments();
 
     widget.pay('charge', { 
-        publicId: 'pk_da6583e5d4a2bf9d6236da80df0e7', // ВАЖНО: Замени на свой Public ID
+        publicId: 'pk_da6583e5d4a2bf9d6236da80df0e7', 
         description: `Оплата заказа: ${DATA.product.name}`,
         amount: DATA.product.price,
         currency: DATA.product.currency,
@@ -230,16 +251,54 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                     variants={variants}
                     initial="enter" animate="center" exit="exit"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="h-full flex flex-col justify-between"
+                    className="h-full flex flex-col justify-between overflow-y-auto no-scrollbar"
                 >
                     <div>
                         <div className="flex justify-between items-start mb-4">
                             <h1 className="text-3xl md:text-5xl font-bold tracking-tight">{DATA.product.name}</h1>
                             <span className="text-xl md:text-2xl font-medium">{DATA.product.price} ₽</span>
                         </div>
-                        <p className="text-zinc-400 text-lg leading-relaxed mb-8">{DATA.product.description}</p>
+                        
+                        <p className="text-zinc-400 text-lg leading-relaxed mb-6">{DATA.product.description}</p>
+
+                        {/* === БЛОК ХАРАКТЕРИСТИК === */}
+                        {DATA.product.specs && (
+                            <div className="bg-zinc-900/50 rounded-xl p-4 mb-6 text-sm space-y-3 border border-zinc-800">
+                                <div className="flex justify-between border-b border-zinc-800 pb-2">
+                                    <span className="text-zinc-500">Размер</span>
+                                    <span className="font-medium">{DATA.product.specs.size}</span>
+                                </div>
+                                <div className="flex justify-between border-b border-zinc-800 pb-2">
+                                    <span className="text-zinc-500">Габариты</span>
+                                    <span className="font-medium">{DATA.product.specs.dimensions}</span>
+                                </div>
+                                <div className="flex justify-between border-b border-zinc-800 pb-2">
+                                    <span className="text-zinc-500">Состав</span>
+                                    <span className="font-medium text-right max-w-[60%]">{DATA.product.specs.composition}</span>
+                                </div>
+                                <div className="flex justify-between pb-2">
+                                    <span className="text-zinc-500">Плотность</span>
+                                    <span className="font-medium">{DATA.product.specs.density}</span>
+                                </div>
+                                
+                                {/* Сетка параметров фигуры */}
+                                <div className="pt-2">
+                                    <p className="text-xs text-zinc-500 mb-2 uppercase tracking-wider font-bold">Параметры фигуры (см)</p>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {DATA.product.specs.measurements.map((m) => (
+                                            <div key={m.label} className="bg-zinc-950 p-2 rounded text-center border border-zinc-800/50">
+                                                <div className="text-xs text-zinc-500 mb-1">{m.label}</div>
+                                                <div className="font-medium">{m.value}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {/* ======================= */}
+
                     </div>
-                    <button onClick={() => paginate('delivery', 1)} className="w-full py-4 bg-white text-black text-lg font-medium rounded-full hover:bg-zinc-200 transition-colors">Оформить заказ</button>
+                    <button onClick={() => paginate('delivery', 1)} className="w-full py-4 bg-white text-black text-lg font-medium rounded-full hover:bg-zinc-200 transition-colors shrink-0">Оформить заказ</button>
                 </motion.div>
             )}
 
@@ -325,8 +384,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                              <p>Тел: {form.phone}</p>
                         </div>
                     </div>
-
-                    {/* Блок с dashed border удален */}
 
                     {/* Кнопки прижаты к низу с помощью mt-auto */}
                     <div className="flex gap-4 mt-auto">
