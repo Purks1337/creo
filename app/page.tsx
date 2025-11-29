@@ -7,8 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProfileCard from "@/components/ProfileCard";
 
-// === ССЫЛКА НА ВАШ СКРИПТ ===
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywXU64HuHJ3yhLVFrkZ-59yTD9jvlixAyz9xdxY6mo_MpqOaPT-y91E-Oze9_d8cy9/exec"; 
+// === БЕРЕМ ССЫЛКУ ИЗ ENV ===
+const GOOGLE_SCRIPT_URL = process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL || "";
 
 // --- Global Types for CloudPayments ---
 declare global {
@@ -178,21 +178,25 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
             console.log("Payment Success", options);
             
             // === ОТПРАВКА В GOOGLE TABLES ===
-            fetch(GOOGLE_SCRIPT_URL, {
-              method: "POST",
-              mode: "no-cors", 
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                orderId: orderId,
-                name: form.name,
-                address: form.address,
-                phone: form.phone,
-                email: form.email,
-                price: DATA.product.price
-              })
-            });
+            if (GOOGLE_SCRIPT_URL) {
+              fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors", 
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  orderId: orderId,
+                  name: form.name,
+                  address: form.address,
+                  phone: form.phone,
+                  email: form.email,
+                  price: DATA.product.price
+                })
+              });
+            } else {
+              console.error("Google Script URL is missing");
+            }
             // ================================
 
             paginate('success', 1);
