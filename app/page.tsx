@@ -113,8 +113,10 @@ const Header = () => (
 const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
   const [step, setStep] = useState<CheckoutStep>("detail");
   const [direction, setDirection] = useState(0);
-  const [form, setForm] = useState({ name: "", address: "", phone: "" });
-  const [errors, setErrors] = useState({ name: false, address: false, phone: false });
+  
+  // === ОБНОВЛЕНО: Добавлен email ===
+  const [form, setForm] = useState({ name: "", address: "", phone: "", email: "" });
+  const [errors, setErrors] = useState({ name: false, address: false, phone: false, email: false });
 
   const variants = {
     enter: (direction: number) => ({ x: direction > 0 ? 50 : -50, opacity: 0 }),
@@ -133,11 +135,16 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
   };
 
   const validateAndProceedToPayment = () => {
+    // Простая проверка email по наличию @ и точки
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
     const newErrors = {
       name: !form.name.trim(),
       address: !form.address.trim(),
       phone: !form.phone.trim(),
+      email: !form.email.trim() || !emailRegex.test(form.email), // Валидация email
     };
+    
     setErrors(newErrors);
     if (!Object.values(newErrors).some(Boolean)) paginate('payment', 1);
   };
@@ -154,9 +161,14 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
         amount: DATA.product.price,
         currency: DATA.product.currency,
         invoiceId: String(Date.now()), 
-        accountId: 'user@example.com', 
+        accountId: form.email, // === ОБНОВЛЕНО: Передаем email для чека ===
         skin: "mini", 
-        data: { name: form.name, address: form.address, phone: form.phone }
+        data: { 
+            name: form.name, 
+            address: form.address, 
+            phone: form.phone,
+            email: form.email 
+        }
     }, {
         onSuccess: (options) => paginate('success', 1),
         onFail: (reason, options) => alert("Ошибка при оплате: " + reason),
@@ -224,14 +236,32 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                 <motion.div key="delivery" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", stiffness: 300, damping: 30 }} className="h-full flex flex-col">
                     <h2 className="text-2xl font-bold mb-6">Доставка</h2>
                     <div className="space-y-6 flex-1">
+                        
+                        {/* ФИО */}
                         <div className="relative">
                             <input value={form.name} onChange={(e) => handleInputChange('name', e.target.value)} className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.name ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} placeholder="ФИО" />
                             {errors.name && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
                         </div>
+
+                        {/* Адрес */}
                         <div className="relative">
                             <input value={form.address} onChange={(e) => handleInputChange('address', e.target.value)} className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.address ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} placeholder="Адрес доставки (Город, Улица, Дом)" />
                             {errors.address && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
                         </div>
+
+                         {/* === ОБНОВЛЕНО: Поле Email === */}
+                         <div className="relative">
+                            <input 
+                                type="email"
+                                value={form.email} 
+                                onChange={(e) => handleInputChange('email', e.target.value)} 
+                                className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.email ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} 
+                                placeholder="Email (для чека)" 
+                            />
+                            {errors.email && <span className="text-xs text-red-500 absolute right-0 top-4">Некорректный email</span>}
+                        </div>
+
+                        {/* Телефон */}
                         <div className="relative">
                             <input type="tel" value={form.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.phone ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} placeholder="Телефон (+7...)" />
                             {errors.phone && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
@@ -252,6 +282,8 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                         <div className="mt-4 pt-4 border-t border-zinc-800 text-sm text-zinc-400">
                              <p>Получатель: {form.name}</p>
                              <p>Адрес: {form.address}</p>
+                             {/* === ОБНОВЛЕНО: Показываем email в сводке === */}
+                             <p>Email: {form.email}</p>
                              <p>Тел: {form.phone}</p>
                         </div>
                     </div>

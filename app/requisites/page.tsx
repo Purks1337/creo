@@ -50,29 +50,29 @@ export default function Requisites() {
           {/* === БАНКОВСКИЕ РЕКВИЗИТЫ === */}
           <div className="flex flex-col md:flex-row justify-between border-b border-zinc-800 pb-4">
             <span className="text-zinc-500">Банк</span>
-            <span className="font-medium text-yellow-500 mt-1 md:mt-0">
-                [[ НАЗВАНИЕ ВАШЕГО БАНКА ]]
+            <span className="font-medium mt-1 md:mt-0">
+                АО «ТБанк»
             </span>
           </div>
 
           <div className="flex flex-col md:flex-row justify-between border-b border-zinc-800 pb-4">
             <span className="text-zinc-500">БИК</span>
-            <span className="font-medium text-yellow-500 mt-1 md:mt-0">
-                [[ 000000000 ]]
+            <span className="font-medium mt-1 md:mt-0">
+                044525974
             </span>
           </div>
 
           <div className="flex flex-col md:flex-row justify-between border-b border-zinc-800 pb-4">
             <span className="text-zinc-500">Расчетный счет</span>
-            <span className="font-medium text-yellow-500 mt-1 md:mt-0">
-                [[ 00000000000000000000 ]]
+            <span className="font-medium mt-1 md:mt-0">
+                40802810100002916561
             </span>
           </div>
           
           <div className="flex flex-col md:flex-row justify-between border-b border-zinc-800 pb-4">
             <span className="text-zinc-500">Корр. счет</span>
-            <span className="font-medium text-yellow-500 mt-1 md:mt-0">
-                [[ 00000000000000000000 ]]
+            <span className="font-medium mt-1 md:mt-0">
+                30101810145250000974
             </span>
           </div>
           {/* ========================== */}
