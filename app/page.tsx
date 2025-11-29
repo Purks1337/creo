@@ -36,7 +36,6 @@ interface Product {
   description: string;
   size: string;
   images: string[];
-  // Новое поле для спецификаций
   specs?: {
     size: string;
     dimensions: string;
@@ -55,7 +54,6 @@ const DATA = {
     currency: "RUB",
     description: "Плотный хлопок, оверсайз крой. Идеально для работы и рейвов. Создана, чтобы пережить любые дедлайны.",
     size: "One Size",
-    // === ОБНОВЛЕННЫЕ ДАННЫЕ ===
     specs: {
       size: "48-50",
       dimensions: "Ширина 58, длина 75",
@@ -67,15 +65,13 @@ const DATA = {
         { label: "Бедра", value: "102-110" },
       ]
     },
-    // ===========================
     images: [
-      "/images/tshirt.webp", // Убедись, что картинка есть в public/images/
+      "/images/tshirt.webp", 
       "https://placehold.co/600x800/222222/FFF?text=Back+View",
       "https://placehold.co/600x800/333333/FFF?text=Detail",
     ],
   } as Product,
   history: {
-    text: "В 2025 году мы решили, что миру нужна только одна футболка. Мы убрали всё лишнее, оставив только суть.",
     photos: [
       "https://placehold.co/400x500/e5e5e5/171717?text=Vibe+1",
       "https://placehold.co/400x500/d4d4d4/171717?text=Vibe+2",
@@ -145,16 +141,13 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
     setStep(newStep);
   };
 
-  // Обработка ввода
   const handleInputChange = (field: keyof typeof form, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
-    // Сбрасываем ошибку при вводе
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: false }));
     }
   };
 
-  // Валидация перед переходом к оплате
   const validateAndProceedToPayment = () => {
     const newErrors = {
       name: !form.name.trim(),
@@ -170,7 +163,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
     }
   };
 
-  // Вызов виджета оплаты
   const handlePayment = () => {
     if (!window.cp) {
       console.error("CloudPayments widget script not loaded");
@@ -184,7 +176,7 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
         description: `Оплата заказа: ${DATA.product.name}`,
         amount: DATA.product.price,
         currency: DATA.product.currency,
-        invoiceId: String(Date.now()), // Уникальный номер заказа
+        invoiceId: String(Date.now()), 
         accountId: 'user@example.com', 
         skin: "mini", 
         data: {
@@ -281,7 +273,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                                     <span className="font-medium">{DATA.product.specs.density}</span>
                                 </div>
                                 
-                                {/* Сетка параметров фигуры */}
                                 <div className="pt-2">
                                     <p className="text-xs text-zinc-500 mb-2 uppercase tracking-wider font-bold">Параметры фигуры (см)</p>
                                     <div className="grid grid-cols-3 gap-2">
@@ -302,7 +293,7 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                 </motion.div>
             )}
 
-            {/* Step 2: Delivery (Form) */}
+            {/* Step 2: Delivery */}
             {step === 'delivery' && (
                 <motion.div 
                     key="delivery"
@@ -314,8 +305,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                 >
                     <h2 className="text-2xl font-bold mb-6">Доставка</h2>
                     <div className="space-y-6 flex-1">
-                        
-                        {/* ФИО */}
                         <div className="relative">
                             <input 
                                 value={form.name}
@@ -327,8 +316,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                             />
                             {errors.name && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
                         </div>
-
-                        {/* Адрес */}
                         <div className="relative">
                             <input 
                                 value={form.address}
@@ -340,8 +327,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                             />
                              {errors.address && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
                         </div>
-
-                        {/* Телефон */}
                         <div className="relative">
                             <input 
                                 type="tel"
@@ -374,8 +359,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                     className="h-full flex flex-col"
                 >
                     <h2 className="text-2xl font-bold mb-6">Оплата</h2>
-                    
-                    {/* Сводка заказа */}
                     <div className="bg-zinc-900 p-6 rounded-xl mb-6">
                         <div className="flex justify-between font-bold text-lg"><span>Итого</span><span>{DATA.product.price} ₽</span></div>
                         <div className="mt-4 pt-4 border-t border-zinc-800 text-sm text-zinc-400">
@@ -384,8 +367,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                              <p>Тел: {form.phone}</p>
                         </div>
                     </div>
-
-                    {/* Кнопки прижаты к низу с помощью mt-auto */}
                     <div className="flex gap-4 mt-auto">
                         <button onClick={() => paginate('delivery', -1)} className="flex-1 py-4 border border-zinc-700 rounded-full hover:bg-zinc-800 transition-colors">Назад</button>
                         <button onClick={handlePayment} className="flex-[2] py-4 bg-white text-black rounded-full hover:bg-zinc-200 transition-colors">Оплатить</button>
@@ -467,7 +448,7 @@ export default function Home() {
           </div>
           
           {/* History Section */}
-          <div className="w-full flex flex-col items-center pb-24">
+          <div className="w-full flex flex-col items-center pb-32">
               <motion.div 
                 initial={{ opacity: 0, y: 50 }} 
                 whileInView={{ opacity: 1, y: 0 }}
@@ -487,9 +468,46 @@ export default function Home() {
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.4 }}
-                className="mt-12 max-w-2xl px-6 text-center text-zinc-500 text-lg leading-relaxed"
+                className="mt-16 max-w-3xl px-6 text-zinc-400 text-lg leading-relaxed space-y-8 text-left"
               >
-                {DATA.history.text}
+                <p>
+                  Совершенно спонтанно, в один из серых дней, я выложил у себя в блоге такую же серую сторис. Про то, как скучно делать буквально всё в этой жизни. Это и вправду сводит меня с ума. В следующей сторис я написал и выложил одну фразу по центру экрана: <span className="text-zinc-100 font-medium">«скука»</span>.
+                </p>
+
+                <p>
+                  В этот же момент я заметил деталь: если зачеркнуть одну букву «к», получится всеми известное литературное слово <span className="text-zinc-100 font-medium">«сука»</span>. Именно так я и сделал в следующей сторис, потому что именно так я себя и чувствовал, именно это я и хотел закричать от всей злости в душе, которая накопилась. Вот и крикнул!! Правда, пикселями в интернет.
+                </p>
+
+                <p>
+                  И на той стороне отразилось эхо - в виде больших охватов, лайков, репостов и заваленного директа в стиле: <i>«это про меня, как же знакомо, жиза»</i>. Это и послужило идеей создания линейки под названием «скука», которая будет объединять всех, кому это дерьмо близко, и всех, кто не готов с этим мириться.
+                </p>
+
+                <p>
+                  Для меня мув с зачеркиванием всё так же символизирует злость того момента. Но мерч продолжает эту метафору и завершает её окончательно.
+                </p>
+
+                {/* Manifesto Block - Clean Minimal Design */}
+                <div className="my-12">
+                  <p className="italic text-zinc-500 mb-6 text-base">Перед вами 3 слова, 3 этапа принятия:</p>
+                  <div className="space-y-4 font-mono text-xl md:text-2xl text-zinc-100">
+                    <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4">
+                       <span className="text-zinc-600 text-sm md:text-base">01</span> 
+                       <span>Скука <span className="text-zinc-500 text-base font-sans font-normal ml-2">— осознание</span></span>
+                    </div>
+                    <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4">
+                       <span className="text-zinc-600 text-sm md:text-base">02</span> 
+                       <span>С<span className="line-through decoration-red-500 decoration-2">к</span>ука <span className="text-zinc-500 text-base font-sans font-normal ml-2">— злость</span></span>
+                    </div>
+                    <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4">
+                       <span className="text-zinc-600 text-sm md:text-base">03</span> 
+                       <span><span className="line-through decoration-zinc-500/50">Скука</span> <span className="text-zinc-500 text-base font-sans font-normal ml-2">— решение, борьба</span></span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-zinc-300 font-medium">
+                  Посмотрите на эту линейку новым взглядом и, надеюсь, этот мерч станет для вас напоминанием: хоть жизнь и бывает дерьмом, но на этом она не заканчивается.
+                </p>
               </motion.div>
           </div>
       </div>
