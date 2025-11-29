@@ -37,7 +37,7 @@ FILES_TO_EXCLUDE = [
 # Расширения файлов, которые считаются бинарными и не будут включены в вывод
 BINARY_EXTENSIONS = [
     '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.eot', '.ttf', '.woff',
-    '.woff2', '.pyc', '.lock', '.zip', '.gz', '.pdf', '.doc', '.docx'
+    '.woff2', '.pyc', '.lock', '.zip', '.gz', '.pdf', '.doc', '.docx', '.webp'
 ]
 # --- КОНЕЦ КОНФИГУРАЦИИ ---
 

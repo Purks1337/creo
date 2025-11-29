@@ -2,8 +2,28 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Script from "next/script";
 import { motion, AnimatePresence } from "framer-motion";
 import ProfileCard from "@/components/ProfileCard";
+
+// --- Global Types for CloudPayments ---
+declare global {
+  interface Window {
+    cp: {
+      CloudPayments: new () => {
+        pay: (
+          type: "auth" | "charge",
+          options: any,
+          callbacks: {
+            onSuccess?: (options: any) => void;
+            onFail?: (reason: any, options: any) => void;
+            onComplete?: (paymentResult: any, options: any) => void;
+          }
+        ) => void;
+      };
+    };
+  }
+}
 
 // --- Types ---
 type CheckoutStep = "detail" | "delivery" | "payment" | "success";
@@ -23,12 +43,12 @@ const DATA = {
   product: {
     id: "001",
     name: "creo basic t-shirt",
-    price: 5000,
+    price: 1,
     currency: "RUB",
     description: "Плотный хлопок, оверсайз крой. Идеально для работы и рейвов. Создана, чтобы пережить любые дедлайны.",
     size: "One Size",
     images: [
-      "/images/tshirt.webp", // Main local image
+      "/images/tshirt.webp", // Убедись, что картинка есть в public/images/
       "https://placehold.co/600x800/222222/FFF?text=Back+View",
       "https://placehold.co/600x800/333333/FFF?text=Detail",
     ],
@@ -43,15 +63,12 @@ const DATA = {
   },
 };
 
-// --- Components ---
-
+// --- Header Component ---
 const Header = () => (
   <motion.header 
     initial={{ opacity: 0, y: -20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.8, ease: "easeOut" }}
-    // REMOVED: fixed top-0 left-0
-    // ADDED: w-full z-40 relative
     className="w-full z-40 px-8 py-8 flex justify-center items-center pointer-events-none relative"
   >
     <div className="pointer-events-auto cursor-pointer opacity-90 hover:opacity-100 transition-opacity">
@@ -67,9 +84,23 @@ const Header = () => (
   </motion.header>
 );
 
-// --- Checkout Flow ---
+// --- Checkout Flow Component ---
 const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
   const [step, setStep] = useState<CheckoutStep>("detail");
+  const [direction, setDirection] = useState(0);
+
+  // Состояние формы и ошибок
+  const [form, setForm] = useState({
+    name: "",
+    address: "",
+    phone: ""
+  });
+
+  const [errors, setErrors] = useState({
+    name: false,
+    address: false,
+    phone: false
+  });
 
   const variants = {
     enter: (direction: number) => ({
@@ -88,11 +119,71 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
     })
   };
 
-  const [direction, setDirection] = useState(0);
-
   const paginate = (newStep: CheckoutStep, newDirection: number) => {
     setDirection(newDirection);
     setStep(newStep);
+  };
+
+  // Обработка ввода
+  const handleInputChange = (field: keyof typeof form, value: string) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+    // Сбрасываем ошибку при вводе
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: false }));
+    }
+  };
+
+  // Валидация перед переходом к оплате
+  const validateAndProceedToPayment = () => {
+    const newErrors = {
+      name: !form.name.trim(),
+      address: !form.address.trim(),
+      phone: !form.phone.trim(),
+    };
+
+    setErrors(newErrors);
+
+    const hasError = Object.values(newErrors).some(Boolean);
+    if (!hasError) {
+      paginate('payment', 1);
+    }
+  };
+
+  // Вызов виджета оплаты
+  const handlePayment = () => {
+    if (!window.cp) {
+      console.error("CloudPayments widget script not loaded");
+      return;
+    }
+
+    const widget = new window.cp.CloudPayments();
+
+    widget.pay('charge', { 
+        publicId: 'pk_da6583e5d4a2bf9d6236da80df0e7', // ВАЖНО: Замени на свой Public ID
+        description: `Оплата заказа: ${DATA.product.name}`,
+        amount: DATA.product.price,
+        currency: DATA.product.currency,
+        invoiceId: String(Date.now()), // Уникальный номер заказа
+        accountId: 'user@example.com', 
+        skin: "mini", 
+        data: {
+            name: form.name,
+            address: form.address,
+            phone: form.phone
+        }
+    }, {
+        onSuccess: (options) => { 
+            console.log("Success", options);
+            paginate('success', 1);
+        },
+        onFail: (reason, options) => { 
+            console.log("Fail", reason, options);
+            alert("Ошибка при оплате: " + reason);
+        },
+        onComplete: (paymentResult, options) => { 
+            console.log("Complete", paymentResult, options);
+        }
+    });
   };
 
   return (
@@ -110,7 +201,7 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
         ✕
       </button>
 
-      {/* Left: Gallery */}
+      {/* Left: Product Image */}
       <div className="w-full md:w-1/2 h-[40vh] md:h-screen bg-zinc-900 relative overflow-hidden">
          <motion.div 
             initial={{ opacity: 0, scale: 1.05 }}
@@ -120,16 +211,18 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
          >
              <Image 
                 src={DATA.product.images[0]} 
-                alt="T-Shirt" 
+                alt="Product" 
                 fill 
                 className="object-contain p-12" 
              />
          </motion.div>
       </div>
 
-      {/* Right: Content Steps */}
+      {/* Right: Steps */}
       <div className="w-full md:w-1/2 h-[60vh] md:h-screen relative p-8 md:p-16 pt-12 flex flex-col bg-background text-foreground">
         <AnimatePresence mode="wait" custom={direction}>
+            
+            {/* Step 1: Details */}
             {step === 'detail' && (
                 <motion.div 
                     key="detail"
@@ -150,6 +243,7 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                 </motion.div>
             )}
 
+            {/* Step 2: Delivery (Form) */}
             {step === 'delivery' && (
                 <motion.div 
                     key="delivery"
@@ -160,18 +254,57 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                     className="h-full flex flex-col"
                 >
                     <h2 className="text-2xl font-bold mb-6">Доставка</h2>
-                    <div className="space-y-4 flex-1">
-                        <input className="w-full bg-transparent border-b border-zinc-700 py-3 outline-none focus:border-white transition-colors placeholder:text-zinc-600" placeholder="ФИО" />
-                        <input className="w-full bg-transparent border-b border-zinc-700 py-3 outline-none focus:border-white transition-colors placeholder:text-zinc-600" placeholder="Адрес" />
-                        <input className="w-full bg-transparent border-b border-zinc-700 py-3 outline-none focus:border-white transition-colors placeholder:text-zinc-600" placeholder="Телефон" />
+                    <div className="space-y-6 flex-1">
+                        
+                        {/* ФИО */}
+                        <div className="relative">
+                            <input 
+                                value={form.name}
+                                onChange={(e) => handleInputChange('name', e.target.value)}
+                                className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${
+                                    errors.name ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'
+                                }`} 
+                                placeholder="ФИО" 
+                            />
+                            {errors.name && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
+                        </div>
+
+                        {/* Адрес */}
+                        <div className="relative">
+                            <input 
+                                value={form.address}
+                                onChange={(e) => handleInputChange('address', e.target.value)}
+                                className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${
+                                    errors.address ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'
+                                }`} 
+                                placeholder="Адрес доставки (Город, Улица, Дом)" 
+                            />
+                             {errors.address && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
+                        </div>
+
+                        {/* Телефон */}
+                        <div className="relative">
+                            <input 
+                                type="tel"
+                                value={form.phone}
+                                onChange={(e) => handleInputChange('phone', e.target.value)}
+                                className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${
+                                    errors.phone ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'
+                                }`} 
+                                placeholder="Телефон (+7...)" 
+                            />
+                             {errors.phone && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
+                        </div>
                     </div>
+
                     <div className="flex gap-4 mt-8">
                         <button onClick={() => paginate('detail', -1)} className="flex-1 py-4 border border-zinc-700 rounded-full hover:bg-zinc-800 transition-colors">Назад</button>
-                        <button onClick={() => paginate('payment', 1)} className="flex-[2] py-4 bg-white text-black rounded-full hover:bg-zinc-200 transition-colors">К оплате</button>
+                        <button onClick={validateAndProceedToPayment} className="flex-[2] py-4 bg-white text-black rounded-full hover:bg-zinc-200 transition-colors">К оплате</button>
                     </div>
                 </motion.div>
             )}
 
+            {/* Step 3: Payment */}
             {step === 'payment' && (
                  <motion.div 
                     key="payment"
@@ -182,19 +315,28 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                     className="h-full flex flex-col"
                 >
                     <h2 className="text-2xl font-bold mb-6">Оплата</h2>
+                    
+                    {/* Сводка заказа */}
                     <div className="bg-zinc-900 p-6 rounded-xl mb-6">
                         <div className="flex justify-between font-bold text-lg"><span>Итого</span><span>{DATA.product.price} ₽</span></div>
+                        <div className="mt-4 pt-4 border-t border-zinc-800 text-sm text-zinc-400">
+                             <p>Получатель: {form.name}</p>
+                             <p>Адрес: {form.address}</p>
+                             <p>Тел: {form.phone}</p>
+                        </div>
                     </div>
-                    <div className="flex-1 border-2 border-dashed border-zinc-800 rounded-xl flex items-center justify-center">
-                        <span className="text-zinc-600">Card Widget</span>
-                    </div>
-                    <div className="flex gap-4 mt-8">
+
+                    {/* Блок с dashed border удален */}
+
+                    {/* Кнопки прижаты к низу с помощью mt-auto */}
+                    <div className="flex gap-4 mt-auto">
                         <button onClick={() => paginate('delivery', -1)} className="flex-1 py-4 border border-zinc-700 rounded-full hover:bg-zinc-800 transition-colors">Назад</button>
-                        <button onClick={() => paginate('success', 1)} className="flex-[2] py-4 bg-white text-black rounded-full hover:bg-zinc-200 transition-colors">Оплатить</button>
+                        <button onClick={handlePayment} className="flex-[2] py-4 bg-white text-black rounded-full hover:bg-zinc-200 transition-colors">Оплатить</button>
                     </div>
                 </motion.div>
             )}
 
+            {/* Step 4: Success */}
             {step === 'success' && (
                 <motion.div 
                     key="success"
@@ -202,8 +344,8 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                     className="h-full flex flex-col items-center justify-center text-center"
                 >
                     <div className="text-5xl mb-4">🎉</div>
-                    <h2 className="text-3xl font-bold mb-2">Заказ принят!</h2>
-                    <p className="text-zinc-400 mb-8">Скоро отправим трек-номер.</p>
+                    <h2 className="text-3xl font-bold mb-2">Заказ оплачен!</h2>
+                    <p className="text-zinc-400 mb-8">Скоро отправим трек-номер на почту.</p>
                     <button onClick={onClose} className="px-8 py-3 border border-zinc-700 rounded-full hover:bg-zinc-800 transition-colors">В магазин</button>
                 </motion.div>
             )}
@@ -222,7 +364,6 @@ export default function Home() {
     setIsMounted(true);
   }, []);
 
-  // Dark grain texture
   const grainUrl = "data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E";
 
   if (!isMounted) {
@@ -232,14 +373,15 @@ export default function Home() {
   return (
     <main className="h-screen w-full bg-background text-foreground bg-noise overflow-hidden relative">
       
-      {/* Inner Scroll Container */}
+      {/* CloudPayments Script */}
+      <Script src="https://widget.cloudpayments.ru/bundles/cloudpayments.js" strategy="lazyOnload" />
+
+      {/* Content Scroll Container */}
       <div className="h-full w-full overflow-y-auto no-scrollbar">
           
-          {/* Header moved INSIDE the scroll container */}
           <Header />
 
-          {/* View 1: Centered Card */}
-          {/* We remove min-h-screen to let it flow naturally, OR keep it if you want full height spacer */}
+          {/* Hero Section */}
           <div className="min-h-[calc(100vh-160px)] w-full flex flex-col items-center justify-center p-6 pb-20">
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9, y: 30 }}
@@ -267,7 +409,7 @@ export default function Home() {
               </motion.div>
           </div>
           
-          {/* View 2: History & Details */}
+          {/* History Section */}
           <div className="w-full flex flex-col items-center pb-24">
               <motion.div 
                 initial={{ opacity: 0, y: 50 }} 
@@ -295,6 +437,7 @@ export default function Home() {
           </div>
       </div>
 
+      {/* Checkout Modal */}
       <AnimatePresence>
         {checkoutOpen && <CheckoutFlow onClose={() => setCheckoutOpen(false)} />}
       </AnimatePresence>
