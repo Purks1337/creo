@@ -454,6 +454,24 @@ export default function Home() {
              </div>
           </motion.div>
 
+          {/* === FOOTER === */}
+          <footer className="w-full py-12 border-t border-zinc-900 mt-12 bg-black/20">
+             <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-6 text-xs text-zinc-600">
+                <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">
+                   <a href="/offer" className="hover:text-zinc-400 transition-colors">Публичная оферта</a>
+                   <a href="/terms" className="hover:text-zinc-400 transition-colors">Условия обслуживания</a>
+                   <a href="/delivery" className="hover:text-zinc-400 transition-colors">Доставка</a>
+                   <a href="/payment" className="hover:text-zinc-400 transition-colors">Оплата</a>
+                   <a href="/refund" className="hover:text-zinc-400 transition-colors">Возврат</a>
+                   <a href="/privacy" className="hover:text-zinc-400 transition-colors">Конфиденциальность</a>
+                   <a href="/requisites" className="hover:text-zinc-400 transition-colors">Реквизиты</a>
+                </div>
+                <div>
+                   © {new Date().getFullYear()} CREO. All rights reserved.
+                </div>
+             </div>
+          </footer>
+
       </div>
 
       {/* Checkout Modal */}
