@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Script from "next/script";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+// === ИСПРАВЛЕНО: Вернули импорты стрелочек ===
+import { ExternalLink, Truck, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import ProfileCard from "@/components/ProfileCard";
 
-// === БЕРЕМ ССЫЛКУ ИЗ ENV ===
+// === ССЫЛКА НА ТЕЛЕГРАМ-СКРИПТ ===
 const GOOGLE_SCRIPT_URL = process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL || "";
 
 // --- Global Types for CloudPayments ---
@@ -31,6 +32,7 @@ declare global {
 
 // --- Types ---
 type CheckoutStep = "detail" | "delivery" | "payment" | "success";
+type DeliveryType = "pickup" | "courier"; // Тип доставки
 
 interface Product {
   id: string;
@@ -117,6 +119,9 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
   const [step, setStep] = useState<CheckoutStep>("detail");
   const [direction, setDirection] = useState(0);
   
+  // Тип доставки
+  const [deliveryType, setDeliveryType] = useState<DeliveryType>("pickup");
+
   const [form, setForm] = useState({ name: "", address: "", phone: "", email: "" });
   const [errors, setErrors] = useState({ name: false, address: false, phone: false, email: false });
 
@@ -156,7 +161,11 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
       return;
     }
 
-    const orderId = String(Date.now()); // Генерируем ID заказа
+    const orderId = String(Date.now()); 
+
+    // Добавляем метку типа доставки к адресу для менеджера
+    const addressPrefix = deliveryType === "pickup" ? "[СДЭК ПВЗ]" : "[КУРЬЕР]";
+    const fullAddress = `${addressPrefix} ${form.address}`;
 
     const widget = new window.cp.CloudPayments();
     widget.pay('charge', { 
@@ -169,36 +178,27 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
         skin: "mini", 
         data: { 
             name: form.name, 
-            address: form.address, 
+            address: fullAddress, 
             phone: form.phone,
             email: form.email 
         }
     }, {
         onSuccess: (options) => { 
-            console.log("Payment Success", options);
-            
-            // === ОТПРАВКА В GOOGLE TABLES ===
             if (GOOGLE_SCRIPT_URL) {
               fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors", 
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   orderId: orderId,
                   name: form.name,
-                  address: form.address,
+                  address: fullAddress, // Адрес с пометкой
                   phone: form.phone,
                   email: form.email,
                   price: DATA.product.price
                 })
               });
-            } else {
-              console.error("Google Script URL is missing");
             }
-            // ================================
-
             paginate('success', 1);
         },
         onFail: (reason, options) => alert("Ошибка при оплате: " + reason),
@@ -265,21 +265,58 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
             {step === 'delivery' && (
                 <motion.div key="delivery" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", stiffness: 300, damping: 30 }} className="h-full flex flex-col">
                     <h2 className="text-2xl font-bold mb-6">Доставка</h2>
+                    
+                    {/* Переключатель типа доставки */}
+                    <div className="flex p-1 bg-zinc-900 rounded-lg mb-6">
+                        <button 
+                            onClick={() => setDeliveryType("pickup")}
+                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                                deliveryType === "pickup" ? "bg-zinc-700 text-white shadow-md" : "text-zinc-500 hover:text-white"
+                            }`}
+                        >
+                            <MapPin size={16} />
+                            Пункт СДЭК
+                        </button>
+                        <button 
+                            onClick={() => setDeliveryType("courier")}
+                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                                deliveryType === "courier" ? "bg-zinc-700 text-white shadow-md" : "text-zinc-500 hover:text-white"
+                            }`}
+                        >
+                            <Truck size={16} />
+                            Курьером
+                        </button>
+                    </div>
+
                     <div className="space-y-6 flex-1">
-                        
-                        {/* ФИО */}
                         <div className="relative">
                             <input value={form.name} onChange={(e) => handleInputChange('name', e.target.value)} className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.name ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} placeholder="ФИО" />
                             {errors.name && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
                         </div>
 
-                        {/* Адрес */}
+                        {/* Динамическое поле адреса */}
                         <div className="relative">
-                            <input value={form.address} onChange={(e) => handleInputChange('address', e.target.value)} className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.address ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} placeholder="Адрес доставки (Город, Улица, Дом)" />
+                            <input 
+                                value={form.address} 
+                                onChange={(e) => handleInputChange('address', e.target.value)} 
+                                className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.address ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} 
+                                placeholder={deliveryType === "pickup" ? "Город, Адрес пункта (или код ПВЗ)" : "Город, Улица, Дом, Квартира"} 
+                            />
                             {errors.address && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
+                            
+                            {/* Ссылка на карту СДЭК для выбора пункта */}
+                            {deliveryType === "pickup" && (
+                                <a 
+                                    href="https://www.cdek.ru/ru/offices" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="absolute right-0 top-3 text-xs text-zinc-400 hover:text-white flex items-center gap-1 bg-zinc-900 px-2 py-1 rounded border border-zinc-800"
+                                >
+                                    Найти на карте <ExternalLink size={10} />
+                                </a>
+                            )}
                         </div>
 
-                         {/* Email */}
                          <div className="relative">
                             <input 
                                 type="email"
@@ -291,7 +328,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                             {errors.email && <span className="text-xs text-red-500 absolute right-0 top-4">Некорректный email</span>}
                         </div>
 
-                        {/* Телефон */}
                         <div className="relative">
                             <input type="tel" value={form.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.phone ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} placeholder="Телефон (+7...)" />
                             {errors.phone && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
@@ -310,8 +346,14 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                     <div className="bg-zinc-900 p-6 rounded-xl mb-6">
                         <div className="flex justify-between font-bold text-lg"><span>Итого</span><span>{DATA.product.price} ₽</span></div>
                         <div className="mt-4 pt-4 border-t border-zinc-800 text-sm text-zinc-400">
+                             <div className="flex justify-between mb-2">
+                                <span className="text-zinc-500">Доставка:</span>
+                                <span className="text-white bg-zinc-800 px-2 py-0.5 rounded text-xs">
+                                    {deliveryType === "pickup" ? "В пункт СДЭК" : "Курьером"}
+                                </span>
+                             </div>
                              <p>Получатель: {form.name}</p>
-                             <p>Адрес: {form.address}</p>
+                             <p className="break-words">Адрес: {form.address}</p>
                              <p>Email: {form.email}</p>
                              <p>Тел: {form.phone}</p>
                         </div>
@@ -341,11 +383,12 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
 export default function Home() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
