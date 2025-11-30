@@ -606,7 +606,7 @@ const DATA = {
   product: {
     id: "001",
     name: "creo basic t-shirt",
-    price: 5000,
+    price: 4900,
     currency: "RUB",
     description: "Плотный хлопок, оверсайз крой. Идеально для работы и рейвов. Создана, чтобы пережить любые дедлайны.",
     size: "One Size",
