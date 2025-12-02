@@ -4,9 +4,9 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Script from "next/script";
 import { motion, AnimatePresence } from "framer-motion";
-// === ИСПРАВЛЕНО: Вернули импорты стрелочек ===
 import { ExternalLink, Truck, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import ProfileCard from "@/components/ProfileCard";
+import Dither from "@/components/Dither"; // Импортируем эффект Dither
 
 // === ССЫЛКА НА ТЕЛЕГРАМ-СКРИПТ ===
 const GOOGLE_SCRIPT_URL = process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL || "";
@@ -217,11 +217,25 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
 
       {/* Left: Product Image */}
       <div className="w-full md:w-1/2 h-[40vh] md:h-screen bg-zinc-900 relative overflow-hidden">
+         {/* Dither Background Effect */}
+         <div className="absolute inset-0 z-0">
+            <Dither
+              waveColor={[0, 0.3, 0]}
+              disableAnimation={false}
+              enableMouseInteraction={true}
+              mouseRadius={0.3}
+              colorNum={4}
+              waveAmplitude={0.3}
+              waveFrequency={3}
+              waveSpeed={0.05}
+            />
+         </div>
+
          <motion.div 
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
-            className="w-full h-full absolute inset-0"
+            className="w-full h-full absolute inset-0 z-10" // z-10 ensure image is above bg
          >
              <Image src={DATA.product.images[0]} alt="Product" fill className="object-contain p-12" />
          </motion.div>

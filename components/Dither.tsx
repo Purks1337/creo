@@ -301,7 +301,7 @@ export default function Dither({
   waveSpeed = 0.05,
   waveFrequency = 3,
   waveAmplitude = 0.3,
-  waveColor = [0.5, 0.5, 0.5],
+  waveColor = [0, 0.3, 0],
   colorNum = 4,
   pixelSize = 2,
   disableAnimation = false,
