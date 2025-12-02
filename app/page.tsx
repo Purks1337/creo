@@ -59,7 +59,7 @@ const DATA = {
     name: "СКУКА",
     price: 4900,
     currency: "RUB",
-    description: "Оверсайз футболка имеет единый универсальный размер - L. Из-за своего свободного кроя она подходит любому человеку ростом до 190см. Материал футболки очень плотный и мягкий. 310гр.\n\n📦 Доставка: 7̶5̶4̶₽̶  Бесплатно.",
+    description: "Оверсайз футболка имеет единый универсальный размер - L. Из-за своего свободного кроя она подходит любому человеку ростом до 190см. Материал футболки очень плотный и мягкий. 310гр.\n\n📦 Доставка: Бесплатно.",
     size: "One Size",
     specs: {
       size: "48-50",
@@ -530,7 +530,7 @@ export default function Home() {
                        <span className="text-zinc-600 text-sm md:text-base">02</span> 
                        <span className="flex items-baseline">
                          <span>С</span>
-                         <span className="relative mx-[1px] text-zinc-500">
+                         <span className="relative mx-[1px] text-zinc-300">
                             к
                             <span className="absolute left-[-1px] right-[-1px] top-[52%] h-[2px] bg-red-600 -translate-y-1/2"></span>
                          </span>
@@ -542,7 +542,7 @@ export default function Home() {
                     <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4">
                        <span className="text-zinc-600 text-sm md:text-base">03</span> 
                        <span className="flex items-baseline">
-                         <span className="relative text-zinc-500">
+                         <span className="relative text-zinc-300">
                             Скука
                             <span className="absolute left-[-2px] right-[-2px] top-[52%] h-[2px] bg-red-600 -translate-y-1/2"></span>
                          </span>
