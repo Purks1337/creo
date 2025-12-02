@@ -76,8 +76,8 @@ const DATA = {
     },
     images: [
       "/images/tshirt.webp",
-      "https://placehold.co/600x800/222222/FFF?text=Back+View",
-      "https://placehold.co/600x800/333333/FFF?text=Detail",
+      "/images/img1.webp",
+      "/images/img2.webp",
     ],
   } as Product,
   history: {
@@ -122,7 +122,9 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
   const [step, setStep] = useState<CheckoutStep>("detail");
   const [direction, setDirection] = useState(0);
 
-  // Состояние deliveryType удалено, так как остался только один способ доставки
+  const [currentImage, setCurrentImage] = useState(0);
+  const [imageDirection, setImageDirection] = useState(0);
+
   const [cdekModalOpen, setCdekModalOpen] = useState(false);
 
   const [form, setForm] = useState({ name: "", address: "", phone: "", email: "" });
@@ -133,7 +135,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'CDEK_CHOICE') {
         const info = event.data.payload;
-        // Формируем строку адреса
         const formattedAddress = `${info.city}, ${info.address} (ПВЗ: ${info.id})`;
 
         setForm(prev => ({ ...prev, address: formattedAddress }));
@@ -153,9 +154,35 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
     exit: (direction: number) => ({ zIndex: 0, x: direction < 0 ? 50 : -50, opacity: 0 })
   };
 
+  const imageVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? '100%' : '-100%',
+      opacity: 0,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? '100%' : '-100%',
+      opacity: 0,
+    }),
+  };
+
   const paginate = (newStep: CheckoutStep, newDirection: number) => {
     setDirection(newDirection);
     setStep(newStep);
+  };
+
+  const paginateImage = (newDirection: number) => {
+    setImageDirection(newDirection);
+    if (newDirection > 0) {
+      setCurrentImage((prev) => (prev === DATA.product.images.length - 1 ? 0 : prev + 1));
+    } else {
+      setCurrentImage((prev) => (prev === 0 ? DATA.product.images.length - 1 : prev - 1));
+    }
   };
 
   const handleInputChange = (field: keyof typeof form, value: string) => {
@@ -185,7 +212,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
 
     const orderId = String(Date.now());
     
-    // Префикс адреса теперь всегда "[СДЭК ПВЗ]"
     const addressPrefix = "[СДЭК ПВЗ]";
     const fullAddress = `${addressPrefix} ${form.address}`;
 
@@ -205,20 +231,14 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
         email: form.email
       }
     }, {
-      // onSuccess теперь пустой, так как мы ждем полного завершения работы виджета.
       onSuccess: (options) => {
-        // Логика здесь не нужна, ждем onComplete
         console.log("Payment successful, waiting for widget to close...");
       },
       onFail: (reason, options) => {
         alert("Ошибка при оплате: " + reason)
       },
-      // === ИЗМЕНЕНО: Логика перенесена в onComplete ===
-      // Этот колбэк вызывается ПОСЛЕ того, как пользователь закрыл виджет.
       onComplete: (paymentResult, options) => {
-        // Проверяем, что оплата действительно прошла успешно
         if (paymentResult && paymentResult.success) {
-          // Отправляем данные в Google Sheet
           if (GOOGLE_SCRIPT_URL) {
             fetch(GOOGLE_SCRIPT_URL, {
               method: "POST",
@@ -234,7 +254,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
               })
             }).catch(err => console.error("Failed to send data to Google Script", err));
           }
-          // Переключаем интерфейс на финальный экран "Заказ оплачен"
           paginate('success', 1);
         }
       }
@@ -258,8 +277,9 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
 
       <div className="w-full h-full overflow-y-auto md:overflow-hidden flex flex-col md:flex-row">
 
-        {/* Left: Product Image */}
-        <div className="w-full md:w-1/2 h-[50vh] md:h-screen bg-zinc-900 relative overflow-hidden shrink-0">
+        {/* Left: Product Image Slider */}
+        <div className="w-full md:w-1/2 h-[50vh] md:h-screen bg-zinc-900 relative overflow-hidden shrink-0 flex items-center justify-center">
+          {/* Dither background */}
           <div className="absolute inset-0 z-0">
             <Dither
               waveColor={[0, 0.3, 0]}
@@ -273,15 +293,42 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
             />
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="w-full h-full absolute inset-0 z-10"
+          {/* Slider content */}
+          <AnimatePresence initial={false} custom={imageDirection}>
+            <motion.div
+              key={currentImage}
+              custom={imageDirection}
+              variants={imageVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ x: { type: 'spring', stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
+              className="absolute inset-0 flex items-center justify-center z-10"
+            >
+              <Image
+                src={DATA.product.images[currentImage]}
+                alt={`Product image ${currentImage + 1}`}
+                fill
+                className="object-contain rounded-lg p-2"
+              />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Navigation Buttons */}
+          <button
+            onClick={() => paginateImage(-1)}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/60 text-white transition-colors backdrop-blur-sm"
           >
-            <Image src={DATA.product.images[0]} alt="Product" fill className="object-contain p-1 md:p-2" />
-          </motion.div>
+            <ChevronLeft size={24} />
+          </button>
+          <button
+            onClick={() => paginateImage(1)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/60 text-white transition-colors backdrop-blur-sm"
+          >
+            <ChevronRight size={24} />
+          </button>
         </div>
+
 
         {/* Right: Steps */}
         <div className="w-full md:w-1/2 h-auto md:h-screen relative p-8 md:p-16 pt-12 flex flex-col bg-background text-foreground shrink-0">
@@ -303,7 +350,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                     <span className="text-xl md:text-2xl font-medium">{DATA.product.price} ₽</span>
                   </div>
                   
-                  {/* === ИЗМЕНЕНО: Блок описания разделен для рендеринга JSX === */}
                   <div className="text-zinc-400 text-lg leading-relaxed mb-6 space-y-4">
                     <p className="whitespace-pre-line">{DATA.product.description}</p>
                     <p>
@@ -351,8 +397,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
               >
                 <h2 className="text-2xl font-bold mb-6">Доставка</h2>
 
-                {/* === УДАЛЕНО: Блок выбора способа доставки === */}
-
                 <div className="space-y-6 flex-1">
                   <div className="relative">
                     <input value={form.name} onChange={(e) => handleInputChange('name', e.target.value)} className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.name ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} placeholder="ФИО" />
@@ -373,7 +417,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                     />
                     {errors.address && <span className="text-xs text-red-500 absolute right-0 top-12">Обязательное поле</span>}
 
-                    {/* КНОПКА ОТКРЫТИЯ ВИДЖЕТА (теперь отображается всегда) */}
                     <button
                       onClick={() => setCdekModalOpen(true)}
                       className="absolute right-0 top-2 text-xs text-black font-semibold flex items-center gap-1 bg-white hover:bg-zinc-200 px-3 py-2 rounded-lg transition-colors z-10"
