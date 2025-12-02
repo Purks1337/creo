@@ -428,8 +428,8 @@ export default function Home() {
                 className="w-full max-w-4xl flex justify-center"
               >
                 <ProfileCard 
-                   name={DATA.product.name}
-                   title={`${DATA.product.price} ${DATA.product.currency}`}
+                   name="СКУКА" 
+                   title="oversized t-shirt"
                    handle="creo.design"
                    status="Limited Edition"
                    avatarUrl={DATA.product.images[0]}
@@ -487,12 +487,12 @@ export default function Home() {
                 <div className="my-12">
                   <p className="italic text-zinc-500 mb-6 text-base">Перед вами 3 слова, 3 этапа принятия:</p>
                   <div className="space-y-4 font-mono text-xl md:text-2xl text-zinc-100">
+                    
                     <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4">
                        <span className="text-zinc-600 text-sm md:text-base">01</span> 
                        <span>Скука <span className="text-zinc-500 text-base font-sans font-normal ml-2">— осознание</span></span>
                     </div>
-                    
-                    {/* 02 - Кастомная красная линия */}
+
                     <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4">
                        <span className="text-zinc-600 text-sm md:text-base">02</span> 
                        <span className="flex items-baseline">
@@ -506,7 +506,6 @@ export default function Home() {
                        </span>
                     </div>
 
-                    {/* 03 - Кастомная серая линия */}
                     <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4">
                        <span className="text-zinc-600 text-sm md:text-base">03</span> 
                        <span className="flex items-baseline">
@@ -535,10 +534,8 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="w-full pb-32"
           >
-             {/* Контейнер выровнен по ширине текста (max-w-3xl) */}
              <div className="relative max-w-3xl mx-auto">
                  
-                 {/* Кнопка Влево (скрыта на мобильных) */}
                  <button 
                     onClick={() => scroll('left')}
                     className="absolute left-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex w-10 h-10 items-center justify-center rounded-full bg-black/50 hover:bg-black/80 text-white transition-colors border border-white/10"
@@ -546,7 +543,6 @@ export default function Home() {
                     <ChevronLeft size={24} />
                  </button>
 
-                 {/* Кнопка Вправо (скрыта на мобильных) */}
                  <button 
                     onClick={() => scroll('right')}
                     className="absolute right-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex w-10 h-10 items-center justify-center rounded-full bg-black/50 hover:bg-black/80 text-white transition-colors border border-white/10"
@@ -554,7 +550,6 @@ export default function Home() {
                     <ChevronRight size={24} />
                  </button>
 
-                 {/* Скролл контейнер с маской */}
                  <div 
                     ref={scrollContainerRef}
                     className="flex gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory no-scrollbar touch-pan-x py-2 px-[calc(50%-130px)]"

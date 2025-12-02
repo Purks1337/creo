@@ -289,6 +289,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1em;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(30px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -324,7 +325,7 @@
 }
 
 .pc-user-text {
-  display: flex;
+  display: none;
   align-items: flex-start;
   flex-direction: column;
   gap: 6px;
@@ -344,6 +345,10 @@
 }
 
 .pc-contact-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 12px 16px;
@@ -378,7 +383,7 @@
 .pc-details {
   width: 100%;
   position: absolute;
-  top: 3em;
+  top: 2em;
   display: flex;
   flex-direction: column;
 }
@@ -393,6 +398,15 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   -webkit-background-clip: text;
+}
+
+/* Стили для подзаголовка */
+.pc-details p {
+  font-size: min(2.5svh, 1.2em);
+  font-weight: 400;
+  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.05em;
 }
 
 @keyframes glow-bg {
@@ -428,6 +442,9 @@
   }
   .pc-details h3 {
     font-size: min(4svh, 2.5em);
+  }
+  .pc-details p {
+    font-size: min(2svh, 1em);
   }
   .pc-user-info {
     --ui-inset: 15px;

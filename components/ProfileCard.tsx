@@ -382,7 +382,7 @@ const ProfileCardComponent: React.FC<ProfileCardProps> = ({
             <div className="pc-content">
               <div className="pc-details">
                 <h3>{name}</h3>
-                {/* Subtitle removed */}
+                <p>{title}</p>
               </div>
             </div>
           </div>
