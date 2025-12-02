@@ -205,25 +205,39 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
         email: form.email
       }
     }, {
+      // onSuccess теперь пустой, так как мы ждем полного завершения работы виджета.
       onSuccess: (options) => {
-        if (GOOGLE_SCRIPT_URL) {
-          fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orderId: orderId,
-              name: form.name,
-              address: fullAddress,
-              phone: form.phone,
-              email: form.email,
-              price: DATA.product.price
-            })
-          });
-        }
-        paginate('success', 1);
+        // Логика здесь не нужна, ждем onComplete
+        console.log("Payment successful, waiting for widget to close...");
       },
-      onFail: (reason, options) => alert("Ошибка при оплате: " + reason),
+      onFail: (reason, options) => {
+        alert("Ошибка при оплате: " + reason)
+      },
+      // === ИЗМЕНЕНО: Логика перенесена в onComplete ===
+      // Этот колбэк вызывается ПОСЛЕ того, как пользователь закрыл виджет.
+      onComplete: (paymentResult, options) => {
+        // Проверяем, что оплата действительно прошла успешно
+        if (paymentResult && paymentResult.success) {
+          // Отправляем данные в Google Sheet
+          if (GOOGLE_SCRIPT_URL) {
+            fetch(GOOGLE_SCRIPT_URL, {
+              method: "POST",
+              mode: "no-cors",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId: orderId,
+                name: form.name,
+                address: fullAddress,
+                phone: form.phone,
+                email: form.email,
+                price: DATA.product.price
+              })
+            }).catch(err => console.error("Failed to send data to Google Script", err));
+          }
+          // Переключаем интерфейс на финальный экран "Заказ оплачен"
+          paginate('success', 1);
+        }
+      }
     });
   };
 
