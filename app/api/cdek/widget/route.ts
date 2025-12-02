@@ -1,3 +1,9 @@
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const apiKey = process.env.YANDEX_MAP_KEY || '';
+
+  const html = `
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -21,17 +27,13 @@
             new window.CDEKWidget({
                 root: 'cdek-map',
                 
-                // 1. УБРАЛИ apiKey (тестовый ключ блочится на проде)
-                // apiKey: 'f4e034c2-8c37-4168-8b97-99b6b3b268d7', 
+                // КЛЮЧ ТЕПЕРЬ БЕРЕТСЯ ИЗ ПЕРЕМЕННОЙ ОКРУЖЕНИЯ
+                apiKey: '${apiKey}', 
                 
-                // 2. ЗАМЕНИЛИ 'Москва' на координаты [долгота, широта]
-                // Это спасает от ошибки "Unable to geocode default location"
                 defaultLocation: [37.6176, 55.7558], 
-                from: [37.6176, 55.7558],
-
+                from: 'Москва',
                 canChoose: true,
-                debug: false, // На проде дебаг можно выключить
-
+                debug: false, 
                 servicePath: '/api/cdek', 
 
                 hideDeliveryOptions: { office: false, door: true },
@@ -52,3 +54,11 @@
     </script>
 </body>
 </html>
+  `;
+
+  return new NextResponse(html, {
+    headers: {
+      'Content-Type': 'text/html',
+    },
+  });
+}
