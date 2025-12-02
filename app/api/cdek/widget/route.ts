@@ -1,7 +1,17 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const apiKey = process.env.YANDEX_MAP_KEY || '';
+  // ОПРЕДЕЛЯЕМ СРЕДУ:
+  // Если мы запускаем 'npm run dev' -> это 'development'.
+  // Если это Vercel -> это 'production'.
+  const isDev = process.env.NODE_ENV === 'development';
+
+  // ВЫБИРАЕМ КЛЮЧ:
+  // 1. Для локальной разработки берем публичный тестовый ключ (он работает везде на localhost).
+  // 2. Для продакшена берем твой личный ключ из ENV (он работает на твоем домене).
+  const apiKey = isDev 
+    ? 'f4e034c2-8c37-4168-8b97-99b6b3b268d7' 
+    : (process.env.YANDEX_MAP_KEY || '');
 
   const html = `
 <!DOCTYPE html>
@@ -27,13 +37,13 @@ export async function GET() {
             new window.CDEKWidget({
                 root: 'cdek-map',
                 
-                // КЛЮЧ ТЕПЕРЬ БЕРЕТСЯ ИЗ ПЕРЕМЕННОЙ ОКРУЖЕНИЯ
+                // Сюда подставится нужный ключ в зависимости от сервера
                 apiKey: '${apiKey}', 
                 
                 defaultLocation: [37.6176, 55.7558], 
                 from: 'Москва',
                 canChoose: true,
-                debug: false, 
+                debug: ${isDev}, // Включаем дебаг только на локалке
                 servicePath: '/api/cdek', 
 
                 hideDeliveryOptions: { office: false, door: true },
