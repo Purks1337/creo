@@ -33,7 +33,8 @@ declare global {
 
 // --- Types ---
 type CheckoutStep = "detail" | "delivery" | "payment" | "success";
-type DeliveryType = "pickup" | "courier";
+// Тип DeliveryType больше не нужен, т.к. остался только один способ доставки
+// type DeliveryType = "pickup" | "courier"; 
 
 interface Product {
   id: string;
@@ -59,7 +60,8 @@ const DATA = {
     name: "СКУКА",
     price: 4900,
     currency: "RUB",
-    description: "Оверсайз футболка имеет единый универсальный размер - L. Из-за своего свободного кроя она подходит любому человеку ростом до 190см. Материал футболки очень плотный и мягкий. 310гр.\n\n📦 Доставка: Бесплатно.\n\n🛠 Если у вас возникли вопросы или трудности с оплатой, напишите нам в ТГ для быстрого ответа: https://t.me/creosupport",
+    // Описание было изменено, чтобы текст о доставке и поддержке рендерился через JSX
+    description: "Оверсайз футболка имеет единый универсальный размер - L. Из-за своего свободного кроя она подходит любому человеку ростом до 190см. Материал футболки очень плотный и мягкий. 310гр.",
     size: "One Size",
     specs: {
       size: "48-50",
@@ -120,8 +122,7 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
   const [step, setStep] = useState<CheckoutStep>("detail");
   const [direction, setDirection] = useState(0);
 
-  // Тип доставки и модалка карты
-  const [deliveryType, setDeliveryType] = useState<DeliveryType>("pickup");
+  // Состояние deliveryType удалено, так как остался только один способ доставки
   const [cdekModalOpen, setCdekModalOpen] = useState(false);
 
   const [form, setForm] = useState({ name: "", address: "", phone: "", email: "" });
@@ -183,8 +184,9 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
     }
 
     const orderId = String(Date.now());
-
-    const addressPrefix = deliveryType === "pickup" ? "[СДЭК ПВЗ]" : "[КУРЬЕР]";
+    
+    // Префикс адреса теперь всегда "[СДЭК ПВЗ]"
+    const addressPrefix = "[СДЭК ПВЗ]";
     const fullAddress = `${addressPrefix} ${form.address}`;
 
     const widget = new window.cp.CloudPayments();
@@ -286,9 +288,18 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                     <h1 className="text-3xl md:text-5xl font-bold tracking-tight">{DATA.product.name}</h1>
                     <span className="text-xl md:text-2xl font-medium">{DATA.product.price} ₽</span>
                   </div>
-                  <p className="text-zinc-400 text-lg leading-relaxed mb-6 whitespace-pre-line">
-                    {DATA.product.description}
-                  </p>
+                  
+                  {/* === ИЗМЕНЕНО: Блок описания разделен для рендеринга JSX === */}
+                  <div className="text-zinc-400 text-lg leading-relaxed mb-6 space-y-4">
+                    <p className="whitespace-pre-line">{DATA.product.description}</p>
+                    <p>
+                      📦 Доставка: (<span className="line-through text-red-500/80">754₽</span>) Бесплатно.
+                    </p>
+                    <p>
+                      🛠 Если у вас возникли вопросы или трудности с оплатой, напишите нам в ТГ для быстрого ответа: <a href="https://t.me/creosupport" target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">https://t.me/creosupport</a>
+                    </p>
+                  </div>
+                  
                   {DATA.product.specs && (
                     <div className="bg-zinc-900/50 rounded-xl p-4 mb-6 text-sm space-y-3 border border-zinc-800">
                       <div className="flex justify-between border-b border-zinc-800 pb-2"><span className="text-zinc-500">Размер</span><span className="font-medium">{DATA.product.specs.size}</span></div>
@@ -326,30 +337,7 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
               >
                 <h2 className="text-2xl font-bold mb-6">Доставка</h2>
 
-                <div className="flex p-1 bg-zinc-900 rounded-lg mb-6 shrink-0">
-                  <button
-                    onClick={() => {
-                      setDeliveryType("pickup");
-                      setForm(f => ({ ...f, address: "" }));
-                    }}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${deliveryType === "pickup" ? "bg-zinc-700 text-white shadow-md" : "text-zinc-500 hover:text-white"
-                      }`}
-                  >
-                    <MapPin size={16} />
-                    Пункт СДЭК
-                  </button>
-                  <button
-                    onClick={() => {
-                      setDeliveryType("courier");
-                      setForm(f => ({ ...f, address: "" }));
-                    }}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${deliveryType === "courier" ? "bg-zinc-700 text-white shadow-md" : "text-zinc-500 hover:text-white"
-                      }`}
-                  >
-                    <Truck size={16} />
-                    Курьером
-                  </button>
-                </div>
+                {/* === УДАЛЕНО: Блок выбора способа доставки === */}
 
                 <div className="space-y-6 flex-1">
                   <div className="relative">
@@ -364,24 +352,22 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                       className={`
                                     w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 
                                     ${errors.address ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}
-                                    ${deliveryType === "pickup" ? "pr-40" : ""} 
+                                    pr-40
                                   `}
-                      readOnly={deliveryType === "pickup"}
-                      placeholder={deliveryType === "pickup" ? "Выберите пункт на карте →" : "Город, Улица, Дом, Квартира"}
+                      readOnly
+                      placeholder="Выберите пункт на карте →"
                     />
                     {errors.address && <span className="text-xs text-red-500 absolute right-0 top-12">Обязательное поле</span>}
 
-                    {/* КНОПКА ОТКРЫТИЯ ВИДЖЕТА */}
-                    {deliveryType === "pickup" && (
-                      <button
-                        onClick={() => setCdekModalOpen(true)}
-                        className="absolute right-0 top-2 text-xs text-black font-semibold flex items-center gap-1 bg-white hover:bg-zinc-200 px-3 py-2 rounded-lg transition-colors z-10"
-                      >
-                        <span className="hidden sm:inline">Выбрать на карте</span>
-                        <span className="inline sm:hidden">Карта</span>
-                        <ExternalLink size={12} />
-                      </button>
-                    )}
+                    {/* КНОПКА ОТКРЫТИЯ ВИДЖЕТА (теперь отображается всегда) */}
+                    <button
+                      onClick={() => setCdekModalOpen(true)}
+                      className="absolute right-0 top-2 text-xs text-black font-semibold flex items-center gap-1 bg-white hover:bg-zinc-200 px-3 py-2 rounded-lg transition-colors z-10"
+                    >
+                      <span className="hidden sm:inline">Выбрать на карте</span>
+                      <span className="inline sm:hidden">Карта</span>
+                      <ExternalLink size={12} />
+                    </button>
                   </div>
 
                   <div className="relative">
@@ -425,7 +411,7 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-zinc-500">Доставка:</span>
                       <span className="bg-zinc-800 text-white px-2 py-0.5 rounded text-xs">
-                        {deliveryType === "pickup" ? "В пункт СДЭК" : "Курьером"}
+                        В пункт СДЭК
                       </span>
                     </div>
                     <p>Получатель: {form.name}</p>
