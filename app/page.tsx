@@ -6,7 +6,8 @@ import Script from "next/script";
 import { motion, AnimatePresence } from "framer-motion";
 import { ExternalLink, Truck, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import ProfileCard from "@/components/ProfileCard";
-import Dither from "@/components/Dither"; // Импортируем эффект Dither
+import Dither from "@/components/Dither"; 
+import LightRays from "@/components/LightRays";
 
 // === ССЫЛКА НА ТЕЛЕГРАМ-СКРИПТ ===
 const GOOGLE_SCRIPT_URL = process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL || "";
@@ -55,7 +56,7 @@ interface Product {
 const DATA = {
   product: {
     id: "001",
-    name: "СКУКА",
+    name: "creo basic t-shirt",
     price: 4900,
     currency: "RUB",
     description: "Оверсайз футболка имеет единый универсальный размер - L. Из-за своего свободного кроя она подходит любому человеку ростом до 190см. Материал футболки очень плотный и мягкий. 310гр.\n\n📦 Доставка: 7̶5̶4̶₽̶  Бесплатно.",
@@ -428,13 +429,31 @@ export default function Home() {
       {/* CloudPayments Script */}
       <Script src="https://widget.cloudpayments.ru/bundles/cloudpayments.js" strategy="lazyOnload" />
 
+
+
       {/* Content Scroll Container */}
-      <div className="h-full w-full overflow-y-auto no-scrollbar scroll-smooth">
-          
+      <div className="h-full w-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
+
+      {/* Global Background Rays (Fixed & Behind everything) */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+          <LightRays
+            raysOrigin="top-center"
+            raysColor="#737373" // Сделали светлее (Zinc 600), чтобы было видно на черном
+            raysSpeed={1}
+            lightSpread={0.5}
+            rayLength={3}
+            followMouse={true}
+            mouseInfluence={0.1}
+            noiseAmount={0}
+            distortion={0}
+          />
+      </div>
+
           <Header />
 
           {/* Hero Section */}
-          <div className="min-h-[calc(100vh-160px)] w-full flex flex-col items-center justify-center p-6 pb-20">
+          <div className="min-h-[calc(100vh-160px)] w-full flex flex-col items-center justify-center p-6 pb-20 relative">
+              
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9, y: 30 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -453,7 +472,7 @@ export default function Home() {
                    onContactClick={() => setCheckoutOpen(true)}
                    grainUrl={grainUrl}
                    innerGradient="linear-gradient(135deg, rgba(18,18,20,0.95) 0%, rgba(30,30,35,0.95) 100%)"
-                   behindGlowColor="rgba(255, 255, 255, 0.05)"
+                   behindGlowColor="rgba(255, 255, 255, 0.20)"
                    behindGlowSize="60%"
                    enableTilt={true}
                    className="cursor-pointer"
