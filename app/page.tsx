@@ -58,7 +58,7 @@ const DATA = {
     name: "creo basic t-shirt",
     price: 4900,
     currency: "RUB",
-    description: "Плотный хлопок, оверсайз крой. Идеально для работы и рейвов. Создана, чтобы пережить любые дедлайны.",
+    description: "Оверсайз футболка имеет единый универсальный размер - L. Из-за своего свободного кроя она подходит любому человеку ростом до 190см. Материал футболки очень плотный и мягкий. 310гр.\n\n📦 Доставка: 7̶5̶4̶₽̶  Бесплатно.",
     size: "One Size",
     specs: {
       size: "48-50",
@@ -72,7 +72,7 @@ const DATA = {
       ]
     },
     images: [
-      "/images/tshirt.webp", 
+      "/images/tshirt.webp",
       "https://placehold.co/600x800/222222/FFF?text=Back+View",
       "https://placehold.co/600x800/333333/FFF?text=Detail",
     ],
@@ -192,7 +192,7 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                 body: JSON.stringify({
                   orderId: orderId,
                   name: form.name,
-                  address: fullAddress, // Адрес с пометкой
+                  address: fullAddress,
                   phone: form.phone,
                   email: form.email,
                   price: DATA.product.price
@@ -237,7 +237,9 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                             <h1 className="text-3xl md:text-5xl font-bold tracking-tight">{DATA.product.name}</h1>
                             <span className="text-xl md:text-2xl font-medium">{DATA.product.price} ₽</span>
                         </div>
-                        <p className="text-zinc-400 text-lg leading-relaxed mb-6">{DATA.product.description}</p>
+                        <p className="text-zinc-400 text-lg leading-relaxed mb-6 whitespace-pre-line">
+                            {DATA.product.description}
+                        </p>
                         {DATA.product.specs && (
                             <div className="bg-zinc-900/50 rounded-xl p-4 mb-6 text-sm space-y-3 border border-zinc-800">
                                 <div className="flex justify-between border-b border-zinc-800 pb-2"><span className="text-zinc-500">Размер</span><span className="font-medium">{DATA.product.specs.size}</span></div>
@@ -300,7 +302,7 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                                 value={form.address} 
                                 onChange={(e) => handleInputChange('address', e.target.value)} 
                                 className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.address ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} 
-                                placeholder={deliveryType === "pickup" ? "Город, Адрес пункта (или код ПВЗ)" : "Город, Улица, Дом, Квартира"} 
+                                placeholder={deliveryType === "pickup" ? "Город, Адрес ПВЗ (или код)" : "Город, Улица, Дом, Квартира"} 
                             />
                             {errors.address && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
                             
@@ -346,9 +348,9 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                     <div className="bg-zinc-900 p-6 rounded-xl mb-6">
                         <div className="flex justify-between font-bold text-lg"><span>Итого</span><span>{DATA.product.price} ₽</span></div>
                         <div className="mt-4 pt-4 border-t border-zinc-800 text-sm text-zinc-400">
-                             <div className="flex justify-between mb-2">
+                             <div className="flex justify-between items-center mb-2">
                                 <span className="text-zinc-500">Доставка:</span>
-                                <span className="text-white bg-zinc-800 px-2 py-0.5 rounded text-xs">
+                                <span className="bg-zinc-800 text-white px-2 py-0.5 rounded text-xs">
                                     {deliveryType === "pickup" ? "В пункт СДЭК" : "Курьером"}
                                 </span>
                              </div>
@@ -489,14 +491,33 @@ export default function Home() {
                        <span className="text-zinc-600 text-sm md:text-base">01</span> 
                        <span>Скука <span className="text-zinc-500 text-base font-sans font-normal ml-2">— осознание</span></span>
                     </div>
+                    
+                    {/* 02 - Кастомная красная линия */}
                     <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4">
                        <span className="text-zinc-600 text-sm md:text-base">02</span> 
-                       <span>С<span className="line-through decoration-red-500 decoration-2">к</span>ука <span className="text-zinc-500 text-base font-sans font-normal ml-2">— злость</span></span>
+                       <span className="flex items-baseline">
+                         <span>С</span>
+                         <span className="relative mx-[1px] text-zinc-500">
+                            к
+                            <span className="absolute left-[-1px] right-[-1px] top-[52%] h-[2px] bg-red-600 -translate-y-1/2"></span>
+                         </span>
+                         <span>ука</span>
+                         <span className="text-zinc-500 text-base font-sans font-normal ml-2">— злость</span>
+                       </span>
                     </div>
+
+                    {/* 03 - Кастомная серая линия */}
                     <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4">
                        <span className="text-zinc-600 text-sm md:text-base">03</span> 
-                       <span><span className="line-through decoration-zinc-500/50">Скука</span> <span className="text-zinc-500 text-base font-sans font-normal ml-2">— решение, борьба</span></span>
+                       <span className="flex items-baseline">
+                         <span className="relative text-zinc-500">
+                            Скука
+                            <span className="absolute left-[-2px] right-[-2px] top-[52%] h-[2px] bg-red-600 -translate-y-1/2"></span>
+                         </span>
+                         <span className="text-zinc-500 text-base font-sans font-normal ml-2">— решение, борьба</span>
+                       </span>
                     </div>
+
                   </div>
                 </div>
 
