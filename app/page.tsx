@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Script from "next/script";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Truck, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { ExternalLink, Truck, MapPin, ChevronLeft, ChevronRight, X } from "lucide-react"; // Добавил X и MapPin
 import ProfileCard from "@/components/ProfileCard";
 import Dither from "@/components/Dither"; 
 import LightRays from "@/components/LightRays";
@@ -33,7 +33,7 @@ declare global {
 
 // --- Types ---
 type CheckoutStep = "detail" | "delivery" | "payment" | "success";
-type DeliveryType = "pickup" | "courier"; // Тип доставки
+type DeliveryType = "pickup" | "courier"; 
 
 interface Product {
   id: string;
@@ -120,11 +120,34 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
   const [step, setStep] = useState<CheckoutStep>("detail");
   const [direction, setDirection] = useState(0);
   
-  // Тип доставки
+  // Тип доставки и модалка карты
   const [deliveryType, setDeliveryType] = useState<DeliveryType>("pickup");
+  const [cdekModalOpen, setCdekModalOpen] = useState(false);
 
   const [form, setForm] = useState({ name: "", address: "", phone: "", email: "" });
   const [errors, setErrors] = useState({ name: false, address: false, phone: false, email: false });
+
+  // === CDEK LISTENER ===
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Проверяем тип сообщения от нашего iframe
+      if (event.data?.type === 'CDEK_CHOICE') {
+        const info = event.data.payload;
+        // Формируем строку адреса: "г. Москва, ул. Ленина 1 (Код: MSK123)"
+        const formattedAddress = `${info.city}, ${info.address} (ПВЗ: ${info.id})`;
+        
+        setForm(prev => ({ ...prev, address: formattedAddress }));
+        // Сбрасываем ошибку адреса, если была
+        if (errors.address) setErrors(prev => ({ ...prev, address: false }));
+        
+        setCdekModalOpen(false);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [errors.address]);
+  // =====================
 
   const variants = {
     enter: (direction: number) => ({ x: direction > 0 ? 50 : -50, opacity: 0 }),
@@ -208,27 +231,23 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <motion.div 
-      // ГЛАВНЫЙ КОНТЕЙНЕР (без скролла, только фиксация на экране)
       className="fixed inset-0 z-50 bg-background"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* КРЕСТИК теперь лежит прямо в Fixed контейнере, он не будет скроллиться */}
       <button 
         onClick={onClose} 
         className="absolute top-6 right-6 z-[60] w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white backdrop-blur-sm"
       >
-        ✕
+        <X size={20} />
       </button>
 
-      {/* ВНУТРЕННИЙ СКРОЛЛ-КОНТЕЙНЕР (Скроллится именно он) */}
       <div className="w-full h-full overflow-y-auto md:overflow-hidden flex flex-col md:flex-row">
         
         {/* Left: Product Image */}
         <div className="w-full md:w-1/2 h-[50vh] md:h-screen bg-zinc-900 relative overflow-hidden shrink-0">
-           {/* Dither Background Effect */}
            <div className="absolute inset-0 z-0">
               <Dither
                 waveColor={[0, 0.3, 0]}
@@ -311,10 +330,13 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                   >
                       <h2 className="text-2xl font-bold mb-6">Доставка</h2>
                       
-                      {/* Переключатель типа доставки */}
                       <div className="flex p-1 bg-zinc-900 rounded-lg mb-6 shrink-0">
                           <button 
-                              onClick={() => setDeliveryType("pickup")}
+                              onClick={() => {
+                                setDeliveryType("pickup");
+                                // Очищаем адрес при смене типа, чтобы не путать
+                                setForm(f => ({ ...f, address: "" }));
+                              }}
                               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                                   deliveryType === "pickup" ? "bg-zinc-700 text-white shadow-md" : "text-zinc-500 hover:text-white"
                               }`}
@@ -323,7 +345,10 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                               Пункт СДЭК
                           </button>
                           <button 
-                              onClick={() => setDeliveryType("courier")}
+                              onClick={() => {
+                                setDeliveryType("courier");
+                                setForm(f => ({ ...f, address: "" }));
+                              }}
                               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                                   deliveryType === "courier" ? "bg-zinc-700 text-white shadow-md" : "text-zinc-500 hover:text-white"
                               }`}
@@ -339,26 +364,26 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                               {errors.name && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
                           </div>
 
-                          {/* Динамическое поле адреса */}
                           <div className="relative">
                               <input 
                                   value={form.address} 
                                   onChange={(e) => handleInputChange('address', e.target.value)} 
                                   className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.address ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} 
-                                  placeholder={deliveryType === "pickup" ? "Город, Адрес ПВЗ (или код)" : "Город, Улица, Дом, Квартира"} 
+                                  // Блокируем ручной ввод для ПВЗ, чтобы пользователь выбирал на карте
+                                  // но можно оставить и ручной, если виджет глючит
+                                  readOnly={deliveryType === "pickup"}
+                                  placeholder={deliveryType === "pickup" ? "Выберите пункт на карте →" : "Город, Улица, Дом, Квартира"} 
                               />
                               {errors.address && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
                               
-                              {/* Ссылка на карту СДЭК для выбора пункта */}
+                              {/* КНОПКА ОТКРЫТИЯ ВИДЖЕТА */}
                               {deliveryType === "pickup" && (
-                                  <a 
-                                      href="https://www.cdek.ru/ru/offices" 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="absolute right-0 top-3 text-xs text-zinc-400 hover:text-white flex items-center gap-1 bg-zinc-900 px-2 py-1 rounded border border-zinc-800"
+                                  <button 
+                                      onClick={() => setCdekModalOpen(true)}
+                                      className="absolute right-0 top-2 text-xs text-black font-semibold flex items-center gap-1 bg-white hover:bg-zinc-200 px-3 py-2 rounded-lg transition-colors"
                                   >
-                                      Найти на карте <ExternalLink size={10} />
-                                  </a>
+                                      Выбрать на карте <ExternalLink size={12} />
+                                  </button>
                               )}
                           </div>
 
@@ -430,6 +455,41 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* === CDEK MODAL (IFRAME) === */}
+      <AnimatePresence>
+        {cdekModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8"
+          >
+             <div className="bg-zinc-900 w-full max-w-5xl h-[80vh] rounded-2xl overflow-hidden relative border border-zinc-700 shadow-2xl flex flex-col">
+                {/* Modal Header */}
+                <div className="bg-zinc-800 p-4 flex justify-between items-center shrink-0">
+                   <h3 className="text-white font-medium">Выберите пункт выдачи</h3>
+                   <button 
+                      onClick={() => setCdekModalOpen(false)}
+                      className="text-zinc-400 hover:text-white transition-colors"
+                   >
+                     <X size={24} />
+                   </button>
+                </div>
+                
+                {/* Iframe */}
+                <div className="flex-1 relative bg-white">
+                  <iframe 
+                    src="/cdek-widget.html"
+                    className="w-full h-full absolute inset-0 border-0"
+                    title="CDEK Map"
+                  />
+                </div>
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
     </motion.div>
   );
 };
@@ -467,8 +527,6 @@ export default function Home() {
       {/* CloudPayments Script */}
       <Script src="https://widget.cloudpayments.ru/bundles/cloudpayments.js" strategy="lazyOnload" />
 
-
-
       {/* Content Scroll Container */}
       <div className="h-full w-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
 
@@ -476,7 +534,7 @@ export default function Home() {
       <div className="absolute inset-0 z-0 pointer-events-none">
           <LightRays
             raysOrigin="top-center"
-            raysColor="#737373" // Сделали светлее (Zinc 600), чтобы было видно на черном
+            raysColor="#737373"
             raysSpeed={1}
             lightSpread={0.5}
             rayLength={3}
