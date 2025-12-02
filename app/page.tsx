@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Script from "next/script";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Truck, MapPin, ChevronLeft, ChevronRight, X } from "lucide-react"; // Добавил X и MapPin
+import { ExternalLink, Truck, MapPin, ChevronLeft, ChevronRight, X } from "lucide-react"; 
 import ProfileCard from "@/components/ProfileCard";
 import Dither from "@/components/Dither"; 
 import LightRays from "@/components/LightRays";
@@ -57,7 +57,7 @@ const DATA = {
   product: {
     id: "001",
     name: "СКУКА",
-    price: 4900,
+    price: 1, // Вернул цену 1 рубль для теста, как было в вашем коде
     currency: "RUB",
     description: "Оверсайз футболка имеет единый универсальный размер - L. Из-за своего свободного кроя она подходит любому человеку ростом до 190см. Материал футболки очень плотный и мягкий. 310гр.\n\n📦 Доставка: Бесплатно.\n\n🛠 Если у вас возникли вопросы или трудности с оплатой, напишите нам в ТГ для быстрого ответа: https://t.me/creosupport",
     size: "One Size",
@@ -130,14 +130,12 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
   // === CDEK LISTENER ===
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Проверяем тип сообщения от нашего iframe
       if (event.data?.type === 'CDEK_CHOICE') {
         const info = event.data.payload;
-        // Формируем строку адреса: "г. Москва, ул. Ленина 1 (Код: MSK123)"
+        // Формируем строку адреса
         const formattedAddress = `${info.city}, ${info.address} (ПВЗ: ${info.id})`;
         
         setForm(prev => ({ ...prev, address: formattedAddress }));
-        // Сбрасываем ошибку адреса, если была
         if (errors.address) setErrors(prev => ({ ...prev, address: false }));
         
         setCdekModalOpen(false);
@@ -147,7 +145,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [errors.address]);
-  // =====================
 
   const variants = {
     enter: (direction: number) => ({ x: direction > 0 ? 50 : -50, opacity: 0 }),
@@ -187,7 +184,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
 
     const orderId = String(Date.now()); 
 
-    // Добавляем метку типа доставки к адресу для менеджера
     const addressPrefix = deliveryType === "pickup" ? "[СДЭК ПВЗ]" : "[КУРЬЕР]";
     const fullAddress = `${addressPrefix} ${form.address}`;
 
@@ -334,7 +330,6 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                           <button 
                               onClick={() => {
                                 setDeliveryType("pickup");
-                                // Очищаем адрес при смене типа, чтобы не путать
                                 setForm(f => ({ ...f, address: "" }));
                               }}
                               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
@@ -368,21 +363,25 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
                               <input 
                                   value={form.address} 
                                   onChange={(e) => handleInputChange('address', e.target.value)} 
-                                  className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.address ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} 
-                                  // Блокируем ручной ввод для ПВЗ, чтобы пользователь выбирал на карте
-                                  // но можно оставить и ручной, если виджет глючит
+                                  className={`
+                                    w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 
+                                    ${errors.address ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}
+                                    ${deliveryType === "pickup" ? "pr-40" : ""} 
+                                  `} 
                                   readOnly={deliveryType === "pickup"}
                                   placeholder={deliveryType === "pickup" ? "Выберите пункт на карте →" : "Город, Улица, Дом, Квартира"} 
                               />
-                              {errors.address && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
+                              {errors.address && <span className="text-xs text-red-500 absolute right-0 top-12">Обязательное поле</span>}
                               
                               {/* КНОПКА ОТКРЫТИЯ ВИДЖЕТА */}
                               {deliveryType === "pickup" && (
                                   <button 
                                       onClick={() => setCdekModalOpen(true)}
-                                      className="absolute right-0 top-2 text-xs text-black font-semibold flex items-center gap-1 bg-white hover:bg-zinc-200 px-3 py-2 rounded-lg transition-colors"
+                                      className="absolute right-0 top-2 text-xs text-black font-semibold flex items-center gap-1 bg-white hover:bg-zinc-200 px-3 py-2 rounded-lg transition-colors z-10"
                                   >
-                                      Выбрать на карте <ExternalLink size={12} />
+                                      <span className="hidden sm:inline">Выбрать на карте</span>
+                                      <span className="inline sm:hidden">Карта</span>
+                                      <ExternalLink size={12} />
                                   </button>
                               )}
                           </div>
