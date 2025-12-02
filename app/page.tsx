@@ -64,7 +64,7 @@ const DATA = {
     specs: {
       size: "48-50",
       dimensions: "Ширина 58, длина 75",
-      composition: "Хлопок 80%, полиэстер 20%, интерлок",
+      composition: "Хлопок 80%, полиэстер 20%",
       density: "310г/м²",
       measurements: [
         { label: "Грудь", value: "94-102" },
