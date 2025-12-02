@@ -217,7 +217,7 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
       <button onClick={onClose} className="absolute top-6 right-6 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white">✕</button>
 
       {/* Left: Product Image */}
-      <div className="w-full md:w-1/2 h-[40vh] md:h-screen bg-zinc-900 relative overflow-hidden">
+      <div className="w-full md:w-1/2 h-[50vh] md:h-screen bg-zinc-900 relative overflow-hidden">
          {/* Dither Background Effect */}
          <div className="absolute inset-0 z-0">
             <Dither
@@ -238,12 +238,12 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
             transition={{ duration: 0.6 }}
             className="w-full h-full absolute inset-0 z-10" // z-10 ensure image is above bg
          >
-             <Image src={DATA.product.images[0]} alt="Product" fill className="object-contain p-12" />
+             <Image src={DATA.product.images[0]} alt="Product" fill className="object-contain p-1 md:p-2" />
          </motion.div>
       </div>
 
       {/* Right: Steps */}
-      <div className="w-full md:w-1/2 h-[60vh] md:h-screen relative p-8 md:p-16 pt-12 flex flex-col bg-background text-foreground">
+      <div className="w-full md:w-1/2 h-[50vh] md:h-screen relative p-8 md:p-16 pt-12 flex flex-col bg-background text-foreground">
         <AnimatePresence mode="wait" custom={direction}>
             {step === 'detail' && (
                 <motion.div key="detail" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", stiffness: 300, damping: 30 }} className="h-full flex flex-col justify-between overflow-y-auto no-scrollbar">
