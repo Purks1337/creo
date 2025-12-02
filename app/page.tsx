@@ -208,189 +208,227 @@ const CheckoutFlow = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <motion.div 
-      className="fixed inset-0 z-50 bg-background flex flex-col md:flex-row overflow-hidden"
+      // ГЛАВНЫЙ КОНТЕЙНЕР (без скролла, только фиксация на экране)
+      className="fixed inset-0 z-50 bg-background"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <button onClick={onClose} className="absolute top-6 right-6 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white">✕</button>
+      {/* КРЕСТИК теперь лежит прямо в Fixed контейнере, он не будет скроллиться */}
+      <button 
+        onClick={onClose} 
+        className="absolute top-6 right-6 z-[60] w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white backdrop-blur-sm"
+      >
+        ✕
+      </button>
 
-      {/* Left: Product Image */}
-      <div className="w-full md:w-1/2 h-[50vh] md:h-screen bg-zinc-900 relative overflow-hidden">
-         {/* Dither Background Effect */}
-         <div className="absolute inset-0 z-0">
-            <Dither
-              waveColor={[0, 0.3, 0]}
-              disableAnimation={false}
-              enableMouseInteraction={true}
-              mouseRadius={0.3}
-              colorNum={4}
-              waveAmplitude={0.3}
-              waveFrequency={3}
-              waveSpeed={0.05}
-            />
-         </div>
+      {/* ВНУТРЕННИЙ СКРОЛЛ-КОНТЕЙНЕР (Скроллится именно он) */}
+      <div className="w-full h-full overflow-y-auto md:overflow-hidden flex flex-col md:flex-row">
+        
+        {/* Left: Product Image */}
+        <div className="w-full md:w-1/2 h-[50vh] md:h-screen bg-zinc-900 relative overflow-hidden shrink-0">
+           {/* Dither Background Effect */}
+           <div className="absolute inset-0 z-0">
+              <Dither
+                waveColor={[0, 0.3, 0]}
+                disableAnimation={false}
+                enableMouseInteraction={true}
+                mouseRadius={0.3}
+                colorNum={4}
+                waveAmplitude={0.3}
+                waveFrequency={3}
+                waveSpeed={0.05}
+              />
+           </div>
 
-         <motion.div 
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="w-full h-full absolute inset-0 z-10" // z-10 ensure image is above bg
-         >
-             <Image src={DATA.product.images[0]} alt="Product" fill className="object-contain p-1 md:p-2" />
-         </motion.div>
-      </div>
+           <motion.div 
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              className="w-full h-full absolute inset-0 z-10"
+           >
+               <Image src={DATA.product.images[0]} alt="Product" fill className="object-contain p-1 md:p-2" />
+           </motion.div>
+        </div>
 
-      {/* Right: Steps */}
-      <div className="w-full md:w-1/2 h-[50vh] md:h-screen relative p-8 md:p-16 pt-12 flex flex-col bg-background text-foreground">
-        <AnimatePresence mode="wait" custom={direction}>
-            {step === 'detail' && (
-                <motion.div key="detail" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", stiffness: 300, damping: 30 }} className="h-full flex flex-col justify-between overflow-y-auto no-scrollbar">
-                    <div>
-                        <div className="flex justify-between items-start mb-4">
-                            <h1 className="text-3xl md:text-5xl font-bold tracking-tight">{DATA.product.name}</h1>
-                            <span className="text-xl md:text-2xl font-medium">{DATA.product.price} ₽</span>
-                        </div>
-                        <p className="text-zinc-400 text-lg leading-relaxed mb-6 whitespace-pre-line">
-                            {DATA.product.description}
-                        </p>
-                        {DATA.product.specs && (
-                            <div className="bg-zinc-900/50 rounded-xl p-4 mb-6 text-sm space-y-3 border border-zinc-800">
-                                <div className="flex justify-between border-b border-zinc-800 pb-2"><span className="text-zinc-500">Размер</span><span className="font-medium">{DATA.product.specs.size}</span></div>
-                                <div className="flex justify-between border-b border-zinc-800 pb-2"><span className="text-zinc-500">Габариты</span><span className="font-medium">{DATA.product.specs.dimensions}</span></div>
-                                <div className="flex justify-between border-b border-zinc-800 pb-2"><span className="text-zinc-500">Состав</span><span className="font-medium text-right max-w-[60%]">{DATA.product.specs.composition}</span></div>
-                                <div className="flex justify-between pb-2"><span className="text-zinc-500">Плотность</span><span className="font-medium">{DATA.product.specs.density}</span></div>
-                                <div className="pt-2">
-                                    <p className="text-xs text-zinc-500 mb-2 uppercase tracking-wider font-bold">Параметры фигуры (см)</p>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {DATA.product.specs.measurements.map((m) => (
-                                            <div key={m.label} className="bg-zinc-950 p-2 rounded text-center border border-zinc-800/50">
-                                                <div className="text-xs text-zinc-500 mb-1">{m.label}</div>
-                                                <div className="font-medium">{m.value}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <button onClick={() => paginate('delivery', 1)} className="w-full py-4 bg-white text-black text-lg font-medium rounded-full hover:bg-zinc-200 transition-colors shrink-0">Оформить заказ</button>
-                </motion.div>
-            )}
+        {/* Right: Steps */}
+        <div className="w-full md:w-1/2 h-auto md:h-screen relative p-8 md:p-16 pt-12 flex flex-col bg-background text-foreground shrink-0">
+          <AnimatePresence mode="wait" custom={direction}>
+              {step === 'detail' && (
+                  <motion.div 
+                      key="detail" 
+                      custom={direction} 
+                      variants={variants} 
+                      initial="enter" 
+                      animate="center" 
+                      exit="exit" 
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }} 
+                      className="min-h-full md:h-full flex flex-col justify-between md:overflow-y-auto no-scrollbar"
+                  >
+                      <div>
+                          <div className="flex justify-between items-start mb-4">
+                              <h1 className="text-3xl md:text-5xl font-bold tracking-tight">{DATA.product.name}</h1>
+                              <span className="text-xl md:text-2xl font-medium">{DATA.product.price} ₽</span>
+                          </div>
+                          <p className="text-zinc-400 text-lg leading-relaxed mb-6 whitespace-pre-line">
+                              {DATA.product.description}
+                          </p>
+                          {DATA.product.specs && (
+                              <div className="bg-zinc-900/50 rounded-xl p-4 mb-6 text-sm space-y-3 border border-zinc-800">
+                                  <div className="flex justify-between border-b border-zinc-800 pb-2"><span className="text-zinc-500">Размер</span><span className="font-medium">{DATA.product.specs.size}</span></div>
+                                  <div className="flex justify-between border-b border-zinc-800 pb-2"><span className="text-zinc-500">Габариты</span><span className="font-medium">{DATA.product.specs.dimensions}</span></div>
+                                  <div className="flex justify-between border-b border-zinc-800 pb-2"><span className="text-zinc-500">Состав</span><span className="font-medium text-right max-w-[60%]">{DATA.product.specs.composition}</span></div>
+                                  <div className="flex justify-between pb-2"><span className="text-zinc-500">Плотность</span><span className="font-medium">{DATA.product.specs.density}</span></div>
+                                  <div className="pt-2">
+                                      <p className="text-xs text-zinc-500 mb-2 uppercase tracking-wider font-bold">Параметры фигуры (см)</p>
+                                      <div className="grid grid-cols-3 gap-2">
+                                          {DATA.product.specs.measurements.map((m) => (
+                                              <div key={m.label} className="bg-zinc-950 p-2 rounded text-center border border-zinc-800/50">
+                                                  <div className="text-xs text-zinc-500 mb-1">{m.label}</div>
+                                                  <div className="font-medium">{m.value}</div>
+                                              </div>
+                                          ))}
+                                      </div>
+                                  </div>
+                              </div>
+                          )}
+                      </div>
+                      <button onClick={() => paginate('delivery', 1)} className="w-full py-4 mt-6 md:mt-0 bg-white text-black text-lg font-medium rounded-full hover:bg-zinc-200 transition-colors shrink-0">Оформить заказ</button>
+                  </motion.div>
+              )}
 
-            {step === 'delivery' && (
-                <motion.div key="delivery" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", stiffness: 300, damping: 30 }} className="h-full flex flex-col">
-                    <h2 className="text-2xl font-bold mb-6">Доставка</h2>
-                    
-                    {/* Переключатель типа доставки */}
-                    <div className="flex p-1 bg-zinc-900 rounded-lg mb-6">
-                        <button 
-                            onClick={() => setDeliveryType("pickup")}
-                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                                deliveryType === "pickup" ? "bg-zinc-700 text-white shadow-md" : "text-zinc-500 hover:text-white"
-                            }`}
-                        >
-                            <MapPin size={16} />
-                            Пункт СДЭК
-                        </button>
-                        <button 
-                            onClick={() => setDeliveryType("courier")}
-                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                                deliveryType === "courier" ? "bg-zinc-700 text-white shadow-md" : "text-zinc-500 hover:text-white"
-                            }`}
-                        >
-                            <Truck size={16} />
-                            Курьером
-                        </button>
-                    </div>
+              {step === 'delivery' && (
+                  <motion.div 
+                      key="delivery" 
+                      custom={direction} 
+                      variants={variants} 
+                      initial="enter" 
+                      animate="center" 
+                      exit="exit" 
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }} 
+                      className="min-h-full md:h-full flex flex-col md:overflow-y-auto no-scrollbar"
+                  >
+                      <h2 className="text-2xl font-bold mb-6">Доставка</h2>
+                      
+                      {/* Переключатель типа доставки */}
+                      <div className="flex p-1 bg-zinc-900 rounded-lg mb-6 shrink-0">
+                          <button 
+                              onClick={() => setDeliveryType("pickup")}
+                              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                                  deliveryType === "pickup" ? "bg-zinc-700 text-white shadow-md" : "text-zinc-500 hover:text-white"
+                              }`}
+                          >
+                              <MapPin size={16} />
+                              Пункт СДЭК
+                          </button>
+                          <button 
+                              onClick={() => setDeliveryType("courier")}
+                              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                                  deliveryType === "courier" ? "bg-zinc-700 text-white shadow-md" : "text-zinc-500 hover:text-white"
+                              }`}
+                          >
+                              <Truck size={16} />
+                              Курьером
+                          </button>
+                      </div>
 
-                    <div className="space-y-6 flex-1">
-                        <div className="relative">
-                            <input value={form.name} onChange={(e) => handleInputChange('name', e.target.value)} className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.name ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} placeholder="ФИО" />
-                            {errors.name && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
-                        </div>
+                      <div className="space-y-6 flex-1">
+                          <div className="relative">
+                              <input value={form.name} onChange={(e) => handleInputChange('name', e.target.value)} className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.name ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} placeholder="ФИО" />
+                              {errors.name && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
+                          </div>
 
-                        {/* Динамическое поле адреса */}
-                        <div className="relative">
-                            <input 
-                                value={form.address} 
-                                onChange={(e) => handleInputChange('address', e.target.value)} 
-                                className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.address ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} 
-                                placeholder={deliveryType === "pickup" ? "Город, Адрес ПВЗ (или код)" : "Город, Улица, Дом, Квартира"} 
-                            />
-                            {errors.address && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
-                            
-                            {/* Ссылка на карту СДЭК для выбора пункта */}
-                            {deliveryType === "pickup" && (
-                                <a 
-                                    href="https://www.cdek.ru/ru/offices" 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="absolute right-0 top-3 text-xs text-zinc-400 hover:text-white flex items-center gap-1 bg-zinc-900 px-2 py-1 rounded border border-zinc-800"
-                                >
-                                    Найти на карте <ExternalLink size={10} />
-                                </a>
-                            )}
-                        </div>
+                          {/* Динамическое поле адреса */}
+                          <div className="relative">
+                              <input 
+                                  value={form.address} 
+                                  onChange={(e) => handleInputChange('address', e.target.value)} 
+                                  className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.address ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} 
+                                  placeholder={deliveryType === "pickup" ? "Город, Адрес ПВЗ (или код)" : "Город, Улица, Дом, Квартира"} 
+                              />
+                              {errors.address && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
+                              
+                              {/* Ссылка на карту СДЭК для выбора пункта */}
+                              {deliveryType === "pickup" && (
+                                  <a 
+                                      href="https://www.cdek.ru/ru/offices" 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="absolute right-0 top-3 text-xs text-zinc-400 hover:text-white flex items-center gap-1 bg-zinc-900 px-2 py-1 rounded border border-zinc-800"
+                                  >
+                                      Найти на карте <ExternalLink size={10} />
+                                  </a>
+                              )}
+                          </div>
 
-                         <div className="relative">
-                            <input 
-                                type="email"
-                                value={form.email} 
-                                onChange={(e) => handleInputChange('email', e.target.value)} 
-                                className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.email ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} 
-                                placeholder="Email (для чека)" 
-                            />
-                            {errors.email && <span className="text-xs text-red-500 absolute right-0 top-4">Некорректный email</span>}
-                        </div>
+                           <div className="relative">
+                              <input 
+                                  type="email"
+                                  value={form.email} 
+                                  onChange={(e) => handleInputChange('email', e.target.value)} 
+                                  className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.email ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} 
+                                  placeholder="Email (для чека)" 
+                              />
+                              {errors.email && <span className="text-xs text-red-500 absolute right-0 top-4">Некорректный email</span>}
+                          </div>
 
-                        <div className="relative">
-                            <input type="tel" value={form.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.phone ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} placeholder="Телефон (+7...)" />
-                            {errors.phone && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
-                        </div>
-                    </div>
-                    <div className="flex gap-4 mt-8">
-                        <button onClick={() => paginate('detail', -1)} className="flex-1 py-4 border border-zinc-700 rounded-full hover:bg-zinc-800 transition-colors">Назад</button>
-                        <button onClick={validateAndProceedToPayment} className="flex-[2] py-4 bg-white text-black rounded-full hover:bg-zinc-200 transition-colors">К оплате</button>
-                    </div>
-                </motion.div>
-            )}
+                          <div className="relative">
+                              <input type="tel" value={form.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className={`w-full bg-transparent border-b py-3 outline-none transition-colors placeholder:text-zinc-600 ${errors.phone ? 'border-red-500 placeholder:text-red-500/50' : 'border-zinc-700 focus:border-white'}`} placeholder="Телефон (+7...)" />
+                              {errors.phone && <span className="text-xs text-red-500 absolute right-0 top-4">Обязательное поле</span>}
+                          </div>
+                      </div>
+                      <div className="flex gap-4 mt-8">
+                          <button onClick={() => paginate('detail', -1)} className="flex-1 py-4 border border-zinc-700 rounded-full hover:bg-zinc-800 transition-colors">Назад</button>
+                          <button onClick={validateAndProceedToPayment} className="flex-[2] py-4 bg-white text-black rounded-full hover:bg-zinc-200 transition-colors">К оплате</button>
+                      </div>
+                  </motion.div>
+              )}
 
-            {step === 'payment' && (
-                 <motion.div key="payment" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", stiffness: 300, damping: 30 }} className="h-full flex flex-col">
-                    <h2 className="text-2xl font-bold mb-6">Оплата</h2>
-                    <div className="bg-zinc-900 p-6 rounded-xl mb-6">
-                        <div className="flex justify-between font-bold text-lg"><span>Итого</span><span>{DATA.product.price} ₽</span></div>
-                        <div className="mt-4 pt-4 border-t border-zinc-800 text-sm text-zinc-400">
-                             <div className="flex justify-between items-center mb-2">
-                                <span className="text-zinc-500">Доставка:</span>
-                                <span className="bg-zinc-800 text-white px-2 py-0.5 rounded text-xs">
-                                    {deliveryType === "pickup" ? "В пункт СДЭК" : "Курьером"}
-                                </span>
-                             </div>
-                             <p>Получатель: {form.name}</p>
-                             <p className="break-words">Адрес: {form.address}</p>
-                             <p>Email: {form.email}</p>
-                             <p>Тел: {form.phone}</p>
-                        </div>
-                    </div>
-                    <div className="flex gap-4 mt-auto">
-                        <button onClick={() => paginate('delivery', -1)} className="flex-1 py-4 border border-zinc-700 rounded-full hover:bg-zinc-800 transition-colors">Назад</button>
-                        <button onClick={handlePayment} className="flex-[2] py-4 bg-white text-black rounded-full hover:bg-zinc-200 transition-colors">Оплатить</button>
-                    </div>
-                </motion.div>
-            )}
+              {step === 'payment' && (
+                   <motion.div 
+                      key="payment" 
+                      custom={direction} 
+                      variants={variants} 
+                      initial="enter" 
+                      animate="center" 
+                      exit="exit" 
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }} 
+                      className="min-h-full md:h-full flex flex-col md:overflow-y-auto no-scrollbar"
+                  >
+                      <h2 className="text-2xl font-bold mb-6">Оплата</h2>
+                      <div className="bg-zinc-900 p-6 rounded-xl mb-6">
+                          <div className="flex justify-between font-bold text-lg"><span>Итого</span><span>{DATA.product.price} ₽</span></div>
+                          <div className="mt-4 pt-4 border-t border-zinc-800 text-sm text-zinc-400">
+                               <div className="flex justify-between items-center mb-2">
+                                  <span className="text-zinc-500">Доставка:</span>
+                                  <span className="bg-zinc-800 text-white px-2 py-0.5 rounded text-xs">
+                                      {deliveryType === "pickup" ? "В пункт СДЭК" : "Курьером"}
+                                  </span>
+                               </div>
+                               <p>Получатель: {form.name}</p>
+                               <p className="break-words">Адрес: {form.address}</p>
+                               <p>Email: {form.email}</p>
+                               <p>Тел: {form.phone}</p>
+                          </div>
+                      </div>
+                      <div className="flex gap-4 mt-auto">
+                          <button onClick={() => paginate('delivery', -1)} className="flex-1 py-4 border border-zinc-700 rounded-full hover:bg-zinc-800 transition-colors">Назад</button>
+                          <button onClick={handlePayment} className="flex-[2] py-4 bg-white text-black rounded-full hover:bg-zinc-200 transition-colors">Оплатить</button>
+                      </div>
+                  </motion.div>
+              )}
 
-            {step === 'success' && (
-                <motion.div key="success" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="h-full flex flex-col items-center justify-center text-center">
-                    <div className="text-5xl mb-4">🎉</div>
-                    <h2 className="text-3xl font-bold mb-2">Заказ оплачен!</h2>
-                    <p className="text-zinc-400 mb-8">Скоро отправим трек-номер на почту.</p>
-                    <button onClick={onClose} className="px-8 py-3 border border-zinc-700 rounded-full hover:bg-zinc-800 transition-colors">В магазин</button>
-                </motion.div>
-            )}
-        </AnimatePresence>
+              {step === 'success' && (
+                  <motion.div key="success" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="h-full flex flex-col items-center justify-center text-center">
+                      <div className="text-5xl mb-4">🎉</div>
+                      <h2 className="text-3xl font-bold mb-2">Заказ оплачен!</h2>
+                      <p className="text-zinc-400 mb-8">Скоро отправим трек-номер на почту.</p>
+                      <button onClick={onClose} className="px-8 py-3 border border-zinc-700 rounded-full hover:bg-zinc-800 transition-colors">В магазин</button>
+                  </motion.div>
+              )}
+          </AnimatePresence>
+        </div>
       </div>
     </motion.div>
   );
